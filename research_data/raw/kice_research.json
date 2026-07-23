@@ -1,0 +1,53 @@
+{
+  "subagent": "Subagent 1: KICE Curriculum & Objective Evaluator",
+  "timestamp": "2026-07-23T16:22:54.944612",
+  "source": "한국교육과정평가원(KICE) 대학수학능력시험 출제 지침 및 2015/2022 개정 교육과정 연구보고서",
+  "evaluation_objectives": [
+    {
+      "objective_code": "OBJ_CALC",
+      "name": "계산 능력 (Calculation)",
+      "description": "기본적인 연산 및 공식을 바르게 적용하여 대수적/해석적 계산을 정확히 수행하는 능력",
+      "weight_trend": "공통/선택 문항 기본 배점 (2점~3점) 중심"
+    },
+    {
+      "objective_code": "OBJ_UNDERSTAND",
+      "name": "수학적 이해 능력 (Understanding)",
+      "description": "수학적 개념, 원리, 기호, 용어의 의미를 정확히 이해하고 표현하는 능력",
+      "weight_trend": "3점~4점 중반부 문항 배치"
+    },
+    {
+      "objective_code": "OBJ_REASONING",
+      "name": "수학적 추론 능력 (Reasoning)",
+      "description": "수학적 귀납/연역 추론, 함수 개형 추론, 조건에 맞는 경우의 수 분류 및 증명 추론",
+      "weight_trend": "킬러/준킬러 핵심 변별력 포인트 (4점 고난도)"
+    },
+    {
+      "objective_code": "OBJ_PROBLEM_SOLVING",
+      "name": "종합적 문제해결 능력 (Problem Solving)",
+      "description": "두 개 이상의 수학적 개념이 결합된 복합 지문 조건을 해독하고 미지의 상태를 단계적으로 해결하는 능력",
+      "weight_trend": "수학 15번, 22번, 30번 최상위 변별력 문항"
+    }
+  ],
+  "curriculum_mapping_2022": {
+    "math1": [
+      "지수함수와 로그함수",
+      "삼각함수",
+      "수열(등차, 등비, 수열의 귀납적 정의)"
+    ],
+    "math2": [
+      "함수의 극단과 연속",
+      "다항함수의 미분법(미분가능성, 극대극소, 비율관계)",
+      "다항함수의 적분법"
+    ],
+    "calculus": [
+      "수열의 극단",
+      "미분법(합성함수/음함수/역함수 미분)",
+      "적분법(치환적분, 부분적분, 넓이와 부피)"
+    ]
+  },
+  "kice_item_design_principles": [
+    "단순 공식 암기로 풀리는 문항 배제 및 개념의 원리적 이해 검증",
+    "지문 조건(가/나/다)을 통한 단계적 힌트 제공 및 추론 방향 제시",
+    "2022 개정 교육과정 취지에 따른 사교육 억제형 공교육 내실화 문항 설계"
+  ]
+}

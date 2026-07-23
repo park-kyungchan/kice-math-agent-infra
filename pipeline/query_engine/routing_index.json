@@ -1,0 +1,29 @@
+{
+  "MATH2_DIFF_SMOOTH": {
+    "keyword": "절댓값 함수의 미분가능성",
+    "unit": "수학II - 다항함수의 미분법",
+    "sample_items": [
+      "202106_MATH_DIF_22",
+      "202211_MATH_DIF_22",
+      "202411_MATH_DIF_22",
+      "202506_MATH_DIF_22"
+    ]
+  },
+  "CALCULUS_INTEGRAL_BOUNDARY": {
+    "keyword": "정적분으로 정의된 함수와 극값",
+    "unit": "미적분 - 정적분의 활용",
+    "sample_items": [
+      "202306_MATH_DIF_22",
+      "202506_MATH_DIF_22"
+    ]
+  },
+  "MATH1_SEQ_INDUCTION": {
+    "keyword": "수열의 귀납적 정의 역방향 추론",
+    "unit": "수학I - 수열",
+    "sample_items": [
+      "202106_MATH_DIF_21",
+      "202311_MATH_DIF_15",
+      "202511_MATH_DIF_15"
+    ]
+  }
+}

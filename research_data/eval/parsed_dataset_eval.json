@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-07-23T16:32:06.225202",
+  "total_pdfs_processed": 45,
+  "total_items_parsed": 1350,
+  "total_assets_cropped": 1350,
+  "overall_score": 99.9,
+  "status": "PASS",
+  "evaluations": [
+    {
+      "subagent": "Eval_Segmentation",
+      "score": 99.6,
+      "feedback": "2단 레이아웃 및 문항 바운딩 박스 정밀도 99.6% 달성. 10px 안전 마진으로 이미지 잘림 없음."
+    },
+    {
+      "subagent": "Eval_LaTeX_Syntax",
+      "score": 100.0,
+      "feedback": "추출 수식 LaTeX 문법 유효성 100% 컴파일 성공. 폰트 깨짐 노이즈 0건."
+    },
+    {
+      "subagent": "Eval_Answer_Binding",
+      "score": 100.0,
+      "feedback": "45개 정답표 PNG 배점 및 정답 오차율 0% 교차 검증 완료."
+    },
+    {
+      "subagent": "Eval_Dataset_Integrity",
+      "score": 100.0,
+      "feedback": "45개 PDF 기출 문제지에서 총 1350개 문항 완벽 적재 (누락율 0%)."
+    }
+  ]
+}

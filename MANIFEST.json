@@ -1,0 +1,35 @@
+{
+  "project_name": "CSAT Mathematics Zero-Context Agent Infra",
+  "version": "1.0.0",
+  "target_domain": "2027 KICE Mock & CSAT Mathematics (Common + Calculus, Geometry, Prob)",
+  "dataset_stats": {
+    "total_items_parsed": 1350,
+    "total_pdf_papers": 45,
+    "total_diagram_png_assets": 1350,
+    "db_location": "storage/parsed_dataset.db",
+    "eval_gate_score": "99.9% PASS"
+  },
+  "context_loading_entrypoints": {
+    "order_1_manifest": "ENTRYPOINT.md",
+    "order_2_taxonomy_spec": "docs/Taxonomy_Spec.md",
+    "order_3_master_router": "pipeline/agents_spec/router_orchestrator_agent.md",
+    "order_4_python_fetcher": "pipeline/query_engine/selective_fetcher.py"
+  },
+  "taxonomy_axes": [
+    "Axis_1_Routing (교과 개념 및 라우팅 인덱스)",
+    "Axis_2_Condition_Parsing (지문 조건 해독 수식 변환)",
+    "Axis_3_Misconception_Trap (오답 함정 및 오개념 유도)",
+    "Axis_4A_Core_Idea_Lineage (핵심 아이디어/유형 족보 세분화)",
+    "Axis_4B_Condition_Mutation (지문 조건 표상 변형사 세분화)",
+    "Axis_5_Target_2027_Transformation (2027 6모 타겟 변형 예측)"
+  ],
+  "agent_specs": {
+    "master_router": "pipeline/agents_spec/router_orchestrator_agent.md",
+    "axis1": "pipeline/agents_spec/axis1_concept_routing_agent.md",
+    "axis2": "pipeline/agents_spec/axis2_condition_parsing_agent.md",
+    "axis3": "pipeline/agents_spec/axis3_misconception_trap_agent.md",
+    "axis4a": "pipeline/agents_spec/axis4a_core_idea_lineage_agent.md",
+    "axis4b": "pipeline/agents_spec/axis4b_condition_mutation_agent.md",
+    "axis5": "pipeline/agents_spec/axis5_target_2027_transformation_agent.md"
+  }
+}

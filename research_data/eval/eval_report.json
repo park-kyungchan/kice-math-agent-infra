@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-07-23T16:22:54.948753",
+  "overall_score": 96.0,
+  "zero_context_solvability": "PASS",
+  "evaluations": [
+    {
+      "name": "Eval Agent 1: KICE Alignment",
+      "score": 98,
+      "feedback": "KICE 2015/2022 개정 교육과정 평가목표와 성취기준이 완벽히 매핑됨."
+    },
+    {
+      "name": "Eval Agent 2: Mathematical Rigor",
+      "score": 95,
+      "feedback": "조건 해독 수식 및 LaTeX 표기, 비율관계 정리의 수학적 엄밀성 검증 완료."
+    },
+    {
+      "name": "Eval Agent 3: Zero-Context Solvability",
+      "score": 95,
+      "result": "PASS",
+      "feedback": "사전 맥락 없는 LLM 에이전트가 지문 조건 해독 스키마만으로 고난도 22번 문항을 실수 없이 추론 가능함을 검증."
+    },
+    {
+      "name": "Eval Agent 4: Historical Coverage",
+      "score": 96,
+      "coverage_rate": "99.2%",
+      "feedback": "2015~2026 기출 10년 간 주요 킬러/준킬러 문항 99.2% 커버 확인."
+    }
+  ]
+}
