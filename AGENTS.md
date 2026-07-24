@@ -2,7 +2,7 @@
 
 > **Deposit Metadata**  
 > - **Deposit Timestamp**: 2026-07-24  
-> - **Infrastructure Version**: `v2.4.0` (Base64 Self-Contained Image Inlining, 4-Tier Automated Eval Harness & Notion Dynamic Engine)
+> - **Infrastructure Version**: `v2.5.0` (Deterministic Condition Parser, 4-Tier Automated Eval Harness & Clean Git Workflow)
 > - **Target Repository**: [kice-math-agent-infra](https://github.com/park-kyungchan/kice-math-agent-infra.git)  
 > - **Workspace Path**: `C:\Users\packr\Claude\kice-math-agent-infra`  
 > - **Compatibility**: 100% Agent-Agnostic (Claude Code, OpenAI Codex, Antigravity/AGY, Gemini, Cursor, etc.)
@@ -14,7 +14,7 @@
 - **OS / Shell**: Windows 11 / PowerShell
 - **Database Engine**: SQLite 3 (`storage/parsed_dataset.db` with 8 Flat Columns & persistent indexing)
 - **Python Runtime**: Python 3.10+ (`pipeline/query_engine/selective_fetcher.py`)
-- **Automated Test Suite**: 16 Unit Tests in `tests/` (100.0% PASS, 0.004ms Batch SLA)
+- **Automated Test Suite**: 17 Unit Tests in `tests/` (100.0% PASS, 0.004ms Batch SLA)
 - **GitHub Synchronization**:
   - Account: `park-kyungchan`
   - Repository: `https://github.com/park-kyungchan/kice-math-agent-infra.git`
