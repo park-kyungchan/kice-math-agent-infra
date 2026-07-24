@@ -212,16 +212,43 @@ class DualTargetReportWriter:
 
         return repo_path, artifact_path
 
+def clean_hwp_pua_symbols(text: str) -> str:
+    """Removes or normalizes HWP Private Use Area (PUA) unicode symbols (U+E000 - U+F8FF)."""
+    if not text:
+        return ""
+    # Map common HWP PUA math symbols
+    pua_map = {
+        '\ue000': '0', '\ue001': '1', '\ue002': '2', '\ue003': '3', '\ue004': '4',
+        '\ue005': '5', '\ue006': '6', '\ue007': '7', '\ue008': '8', '\ue009': '9',
+        '\ue0cf': 'f', '\ue0d0': 'g', '\ue0d1': 'h', '\ue0d2': 'x', '\ue0d3': 'y', '\ue0d4': 'z',
+        '\ue0c5': '(', '\ue0c6': ')', '\ue0c7': '{', '\ue0c8': '}', '\ue0b5': '|', '\ue0b6': '|'
+    }
+    res = []
+    for ch in text:
+        if ch in pua_map:
+            res.append(pua_map[ch])
+        elif '\ue000' <= ch <= '\uf8ff':
+            continue  # Drop unmapped HWP PUA font noise
+        else:
+            res.append(ch)
+    return "".join(res)
+
 class HTMLReportBuilder:
     """
     Sample 09: Notion / Craft Workspace Aesthetic with Dynamic Adaptive Placement Engine.
-    Dynamically adjusts layout based on item asset presence, subject track, and reasoning depth.
+    Supports Base64 Data URI Inlining with Fallback to Relative/Original File Paths.
     """
 
     def __init__(self, writer: Optional[DualTargetReportWriter] = None):
         self.writer = writer or DualTargetReportWriter()
 
-    def build_report(self, item_data: Dict[str, Any], save: bool = True, enforce_completeness: bool = True) -> str:
+    def build_report(
+        self,
+        item_data: Dict[str, Any],
+        save: bool = True,
+        enforce_completeness: bool = True,
+        embed_base64: bool = True
+    ) -> str:
         item_id = item_data.get('item_id', 'UNKNOWN_ITEM')
         exam_id = item_data.get('exam_id', '')
         track = item_data.get('track', '')
@@ -232,6 +259,12 @@ class HTMLReportBuilder:
         latex_content = item_data.get('latex_content', '')
         asset_image_url = item_data.get('asset_image_url', '')
         axes = item_data.get('axes', {})
+
+        # Extract normalized_latex from Axis_2 if available for clean MathJax rendering
+        axis2 = axes.get('Axis_2', {})
+        normalized_latex = axis2.get('normalized_latex', '')
+        
+        display_latex = normalized_latex if normalized_latex else clean_hwp_pua_symbols(latex_content)
 
         # Dynamic Layout Engine Construction
         dynamic_axes_tree = render_dynamic_tree(axes, key_name="axes")
@@ -248,19 +281,21 @@ class HTMLReportBuilder:
             <div class="notion-split-grid" data-key="asset_image_url" data-asset-url="{html.escape(str(asset_image_url))}">
                 <div class="notion-card">
                     <div class="card-label">📷 원본 평가원 자산 이미지</div>
-                    <img src="{img_src}" data-asset-url="{html.escape(str(asset_image_url))}" alt="Diagram Asset" style="max-width:100%; border-radius:6px; border:1px solid #e3e3e1;">
+                    <div style="background:#ffffff; border-radius:6px; padding:1.25rem; display:flex; justify-content:center; align-items:center;">
+                        <img src="{img_src}" data-asset-url="{html.escape(str(asset_image_url))}" alt="Diagram Asset" style="max-width:100%; height:auto; object-fit:contain; border-radius:4px;">
+                    </div>
                 </div>
-                <div class="notion-card" data-key="latex_content">
-                    <div class="card-label">📝 KaTeX 파싱 명제 원문</div>
-                    <div class="math-box">{html.escape(latex_content)}</div>
+                <div class="notion-card" data-key="latex_content" data-raw-latex="{html.escape(str(latex_content))}">
+                    <div class="card-label">📝 KaTeX / MathJax 정규화 명제 원문</div>
+                    <div class="math-box" data-raw-latex="{html.escape(str(latex_content))}">{html.escape(display_latex)}</div>
                 </div>
             </div>
             """
         else:
             question_block = f"""
-            <div class="notion-card full-width" data-key="latex_content">
-                <div class="card-label">📝 KaTeX 파싱 명제 원문</div>
-                <div class="math-box">{html.escape(latex_content)}</div>
+            <div class="notion-card full-width" data-key="latex_content" data-raw-latex="{html.escape(str(latex_content))}">
+                <div class="card-label">📝 KaTeX / MathJax 정규화 명제 원문</div>
+                <div class="math-box" data-raw-latex="{html.escape(str(latex_content))}">{html.escape(display_latex)}</div>
             </div>
             """
 
@@ -362,6 +397,7 @@ class HTMLReportBuilder:
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1.25rem;
+            align-items: start;
             margin: 1.5rem 0;
         }}
 
