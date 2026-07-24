@@ -126,5 +126,61 @@ class TestClaimProvenance(ClaimProvenanceTestBase):
         self.assertEqual(row[1], event['event_id'])
 
 
+class TestClaimProvenanceValidation(ClaimProvenanceTestBase):
+    """v2.8.2 P0-2 acceptance tests."""
+
+    def test_claim_requires_nonempty_source_refs(self):
+        conn = self.fetcher.get_connection()
+        with self.assertRaises(cp.ProvenanceError):
+            cp.record_claim(
+                conn, 'ITEM_FULL', 'Axis_6', '/historical_precedents/0/relation_type',
+                'stmt', 'INFERENCE', source_refs=[],
+                derived_by={'actor_type': 'AGENT', 'actor_id': 'a'},
+            )
+        with self.assertRaises(cp.ProvenanceError):
+            cp.record_claim(
+                conn, 'ITEM_FULL', 'Axis_6', '/historical_precedents/0/relation_type',
+                'stmt', 'INFERENCE', source_refs=None,
+                derived_by={'actor_type': 'AGENT', 'actor_id': 'a'},
+            )
+
+    def test_claim_actor_type_is_closed_enum(self):
+        conn = self.fetcher.get_connection()
+        with self.assertRaises(cp.ProvenanceError):
+            cp.record_claim(
+                conn, 'ITEM_FULL', 'Axis_6', '/historical_precedents/0/relation_type',
+                'stmt', 'INFERENCE',
+                source_refs=[{'source_type': 'ORIGINAL_EXAM_TEXT', 'item_id': 'ITEM_X'}],
+                derived_by={'actor_type': 'HUMAN', 'actor_id': 'a'},
+            )
+
+    def test_claim_pointer_targets_existing_axis_field(self):
+        conn = self.fetcher.get_connection()
+        # Axis_3 has real analysis on ITEM_FULL: {"review_required": True, "confidence_score": 0.5}
+        claim = cp.record_claim(
+            conn, 'ITEM_FULL', 'Axis_3', '/confidence_score', 'confidence is 0.5', 'FACT',
+            source_refs=[{'source_type': 'AXIS_ANALYSIS', 'item_id': 'ITEM_FULL',
+                          'field': 'axis3_symbolic_modeling'}],
+            derived_by={'actor_type': 'SYSTEM', 'actor_id': 'axis3-agent'},
+        )
+        self.assertTrue(claim['claim_id'].startswith('CLM-'))
+
+        # Pointer that does not exist in Axis_3's real JSON.
+        with self.assertRaises(cp.ProvenanceError):
+            cp.record_claim(
+                conn, 'ITEM_FULL', 'Axis_3', '/nonexistent_field', 'stmt', 'FACT',
+                source_refs=[{'source_type': 'AXIS_ANALYSIS', 'item_id': 'ITEM_FULL'}],
+                derived_by={'actor_type': 'SYSTEM', 'actor_id': 'axis3-agent'},
+            )
+
+        # Axis with NO analysis at all on this item (ITEM_FULL has no Axis_1 data).
+        with self.assertRaises(cp.ProvenanceError):
+            cp.record_claim(
+                conn, 'ITEM_FULL', 'Axis_1', '/anything', 'stmt', 'FACT',
+                source_refs=[{'source_type': 'AXIS_ANALYSIS', 'item_id': 'ITEM_FULL'}],
+                derived_by={'actor_type': 'SYSTEM', 'actor_id': 'axis3-agent'},
+            )
+
+
 if __name__ == '__main__':
     unittest.main()
