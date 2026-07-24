@@ -10,6 +10,7 @@ import sys
 import io
 import json
 import html
+import re
 import tempfile
 from html.parser import HTMLParser
 from typing import Dict, List, Any, Tuple, Set, Optional
@@ -233,6 +234,45 @@ def clean_hwp_pua_symbols(text: str) -> str:
             res.append(ch)
     return "".join(res)
 
+def format_latex_conditions(latex_str: str) -> str:
+    """Formats dense LaTeX question text into human-readable condition blocks."""
+    if not latex_str:
+        return ""
+    
+    text = latex_str.replace('\r\n', '\n').strip()
+    
+    # Split on (가), (나), (다), target expression, or newlines
+    raw_flat = text.replace('\n', ' ')
+    raw_flat = re.sub(r'(\([가-하]\))', r'\n\1 ', raw_flat)
+    raw_flat = re.sub(r'(\$?[fgh]\([0-9a-zA-Z]+\)\$?의\s*값은\?)', r'\n\1 ', raw_flat)
+    raw_flat = re.sub(r'(\[CHOICE_[1-5]\])', r'\n\1 ', raw_flat)
+    
+    lines = [l.strip() for l in raw_flat.split('\n') if l.strip()]
+
+    formatted_parts = []
+    condition_items = []
+    
+    for line in lines:
+        if re.match(r'^\([가-하]\)', line):
+            condition_items.append(f'<div class="condition-item">{html.escape(line)}</div>')
+        elif line.startswith('[CHOICE_'):
+            continue  # Rendered in dedicated choice card
+        elif '의 값은?' in line or '[4점]' in line or '[3점]' in line or '의 값은' in line:
+            if condition_items:
+                formatted_parts.append(f'<div class="condition-block">{"".join(condition_items)}</div>')
+                condition_items = []
+            formatted_parts.append(f'<div class="target-line">{html.escape(line)}</div>')
+        else:
+            if condition_items:
+                formatted_parts.append(f'<div class="condition-block">{"".join(condition_items)}</div>')
+                condition_items = []
+            formatted_parts.append(f'<div class="intro-line">{html.escape(line)}</div>')
+            
+    if condition_items:
+        formatted_parts.append(f'<div class="condition-block">{"".join(condition_items)}</div>')
+        
+    return "".join(formatted_parts)
+
 class HTMLReportBuilder:
     """
     Sample 09: Notion / Craft Workspace Aesthetic with Dynamic Adaptive Placement Engine.
@@ -264,7 +304,8 @@ class HTMLReportBuilder:
         axis2 = axes.get('Axis_2', {})
         normalized_latex = axis2.get('normalized_latex', '')
         
-        display_latex = normalized_latex if normalized_latex else clean_hwp_pua_symbols(latex_content)
+        display_raw = normalized_latex if normalized_latex else clean_hwp_pua_symbols(latex_content)
+        display_html = format_latex_conditions(display_raw)
 
         # Dynamic Layout Engine Construction
         dynamic_axes_tree = render_dynamic_tree(axes, key_name="axes")
@@ -286,16 +327,16 @@ class HTMLReportBuilder:
                     </div>
                 </div>
                 <div class="notion-card" data-key="latex_content" data-raw-latex="{html.escape(str(latex_content))}">
-                    <div class="card-label">📝 KaTeX / MathJax 정규화 명제 원문</div>
-                    <div class="math-box" data-raw-latex="{html.escape(str(latex_content))}">{html.escape(display_latex)}</div>
+                    <div class="card-label">📝 KaTeX / MathJax 조건별 명제 원문</div>
+                    <div class="math-box" data-raw-latex="{html.escape(str(latex_content))}">{display_html}</div>
                 </div>
             </div>
             """
         else:
             question_block = f"""
             <div class="notion-card full-width" data-key="latex_content" data-raw-latex="{html.escape(str(latex_content))}">
-                <div class="card-label">📝 KaTeX / MathJax 정규화 명제 원문</div>
-                <div class="math-box" data-raw-latex="{html.escape(str(latex_content))}">{html.escape(display_latex)}</div>
+                <div class="card-label">📝 KaTeX / MathJax 조건별 명제 원문</div>
+                <div class="math-box" data-raw-latex="{html.escape(str(latex_content))}">{display_html}</div>
             </div>
             """
 
@@ -415,8 +456,36 @@ class HTMLReportBuilder:
         .card-label {{ font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase; }}
 
         .math-box {{
-            font-size: 1.05rem;
+            font-size: 1.02rem;
+            line-height: 1.7;
+        }}
+
+        .intro-line {{
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+        }}
+
+        .condition-block {{
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-notion);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin: 0.75rem 0;
+        }}
+
+        @media (prefers-color-scheme: dark) {{
+            .condition-block {{ background: rgba(255, 255, 255, 0.03); }}
+        }}
+
+        .condition-item {{
+            margin: 0.4rem 0;
             line-height: 1.6;
+        }}
+
+        .target-line {{
+            margin-top: 0.75rem;
+            font-weight: 700;
+            color: var(--accent-blue);
         }}
 
         .choice-tag {{

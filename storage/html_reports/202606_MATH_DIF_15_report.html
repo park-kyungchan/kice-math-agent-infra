@@ -107,8 +107,36 @@
         .card-label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase; }
 
         .math-box {
-            font-size: 1.05rem;
+            font-size: 1.02rem;
+            line-height: 1.7;
+        }
+
+        .intro-line {
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+        }
+
+        .condition-block {
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-notion);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin: 0.75rem 0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .condition-block { background: rgba(255, 255, 255, 0.03); }
+        }
+
+        .condition-item {
+            margin: 0.4rem 0;
             line-height: 1.6;
+        }
+
+        .target-line {
+            margin-top: 0.75rem;
+            font-weight: 700;
+            color: var(--accent-blue);
         }
 
         .choice-tag {
@@ -196,7 +224,7 @@
 [CHOICE_4] 
 [CHOICE_5] 
 6">
-                    <div class="card-label">📝 KaTeX / MathJax 정규화 명제 원문</div>
+                    <div class="card-label">📝 KaTeX / MathJax 조건별 명제 원문</div>
                     <div class="math-box" data-raw-latex="15. 상수항이 인 삼차함수 가 다음 조건을 만족시킨다.
 (가) 
 
@@ -220,10 +248,7 @@
 [CHOICE_3] 
 [CHOICE_4] 
 [CHOICE_5] 
-6">15. 상수항이 $0$인 삼차함수 $f(x)$가 다음 조건을 만족시킨다.
-(가) $\int_{p}^{p+3} |f(x)| dx \neq \left| \int_{p}^{p+3} f(x) dx \right|$ 가 되도록 하는 모든 실수 $p$의 값의 범위는 $0 &lt; p &lt; 3$이다.
-(나) $\int_{0}^{3} |f(x)+q| dx \neq \left| \int_{0}^{3} (f(x)+q) dx \right|$ 가 되도록 하는 모든 실수 $q$의 값의 범위는 $0 &lt; q &lt; 1$이다.
-$f(6)$의 값은? [4점]</div>
+6"><div class="intro-line">15. 상수항이 $0$인 삼차함수 $f(x)$가 다음 조건을 만족시킨다.</div><div class="condition-block"><div class="condition-item">(가)  $\int_{p}^{p+3} |f(x)| dx \neq \left| \int_{p}^{p+3} f(x) dx \right|$ 가 되도록 하는 모든 실수 $p$의 값의 범위는 $0 &lt; p &lt; 3$이다.</div><div class="condition-item">(나)  $\int_{0}^{3} |f(x)+q| dx \neq \left| \int_{0}^{3} (f(x)+q) dx \right|$ 가 되도록 하는 모든 실수 $q$의 값의 범위는 $0 &lt; q &lt; 1$이다.</div></div><div class="target-line">$f(6)$의 값은?  [4점]</div></div>
                 </div>
             </div>
             
