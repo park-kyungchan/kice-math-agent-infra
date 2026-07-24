@@ -14,9 +14,9 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from pipeline.query_engine.selective_fetcher import QuestionFetcher
 
-# Force UTF-8 output streams on Windows PowerShell
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
 
 def main():
     parser = argparse.ArgumentParser(description="Zero-Context Agent-Agnostic CLI Fetcher")
@@ -25,6 +25,7 @@ def main():
     parser.add_argument("--number", type=int, help="Item number (e.g. 15)")
     parser.add_argument("--axes", type=str, help="Comma-separated list of axes (e.g. Axis_1,Axis_3)")
     parser.add_argument("--summary", action="store_true", help="Output short summary instead of full JSON")
+    parser.add_argument("--html", action="store_true", help="Generate 100% complete HTML report artifact")
 
     args = parser.parse_args()
     fetcher = QuestionFetcher()
@@ -33,6 +34,19 @@ def main():
 
     if args.item:
         item = fetcher.get_question(args.item, axes=selected_axes)
+        if args.html:
+            from pipeline.report_generator.html_builder import HTMLReportBuilder
+            builder = HTMLReportBuilder()
+            builder.build_report(item, save=True, enforce_completeness=True)
+            report_path = os.path.abspath(os.path.join("storage", "html_reports", f"{args.item}_report.html"))
+            print(json.dumps({
+                "item_id": args.item,
+                "status": "HTML_REPORT_GENERATED",
+                "html_report_path": report_path,
+                "file_uri": f"file:///{report_path.replace('\\', '/')}"
+            }, ensure_ascii=False, indent=2))
+            return
+
         if args.summary:
             print(json.dumps({
                 "item_id": item.get("item_id"),
