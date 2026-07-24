@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Sample 09: Notion / Craft Workspace Aesthetic</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #ffffff; color: #37352f; font-family: 'Inter', 'Noto Sans KR', sans-serif; padding: 3rem; max-width: 900px; margin: 0 auto; line-height: 1.7; }
+        .notion-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+        .notion-title { font-size: 2.2rem; font-weight: 700; color: #37352f; margin-bottom: 0.5rem; }
+        .callout { background: #f1f1ef; border-radius: 4px; padding: 1rem 1.25rem; display: flex; gap: 0.75rem; margin: 1.25rem 0; border: 1px solid #e3e3e1; }
+        .toggle-box { border-left: 2px solid #e3e3e1; padding-left: 1rem; margin: 1rem 0; }
+        .tag { background: rgba(135, 131, 120, 0.15); color: #eb5757; font-size: 0.8rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="notion-icon">📐</div>
+    <div style="font-size:0.8rem; color:#787774; font-weight:600;">SAMPLE 09: NOTION / CRAFT WORKSPACE</div>
+    <div class="notion-title">202606_MATH_DIF_15 문항분석 노원</div>
+    
+    <div class="callout">
+        <span style="font-size:1.2rem;">💡</span>
+        <div>
+            <strong>개요:</strong> 2026학년도 6월 모의평가 수학 공통 15번 (삼차함수 정적분 절댓값 등식 미성립 조건)
+        </div>
+    </div>
+
+    <h3 style="margin-top:2rem; font-weight:700;">▶ 1. 문항 원문 및 조건 추출</h3>
+    <div class="toggle-box">
+        <p>상수항이 $0$인 삼차함수 $f(x)$에 대하여</p>
+        <span class="tag">조건 (가)</span> $\int_{p}^{p+3} |f(x)| dx \neq \left| \int_{p}^{p+3} f(x) dx \right| \implies 0 < p < 3$<br>
+        <span class="tag">조건 (나)</span> $\int_{0}^{3} |f(x)+q| dx \neq \left| \int_{0}^{3} (f(x)+q) dx \right| \implies 0 < q < 1$
+    </div>
+
+    <h3 style="margin-top:2rem; font-weight:700;">▶ 2. 8-Axis 수식 해법 및 검증</h3>
+    <div class="toggle-box">
+        <p><strong>수식 모델:</strong> $f(x) = \frac{1}{4}x^2(x-3)$</p>
+        <p><strong>f(6) 구하기:</strong> $f(6) = \frac{1}{4} \cdot 36 \cdot 3 = 27$</p>
+        <p style="color:#27b97d; font-weight:700;">정답: ④번 (27)</p>
+    </div>
+</body>
+</html>

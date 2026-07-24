@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Sample 08: Stripe Dynamic Aurora Gradient</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #0f172a;
+            color: #fff;
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            padding: 2.5rem;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            left: -100px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(236,72,153,0.3) 0%, rgba(139,92,246,0.2) 50%, transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+            filter: blur(60px);
+        }
+        .container { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; }
+        .aurora-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
+        .aurora-title { font-size: 2.2rem; font-weight: 900; background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="aurora-card">
+            <div style="font-size:0.8rem; font-weight:700; color:#ec4899;">SAMPLE 08: STRIPE DYNAMIC AURORA MESH</div>
+            <div class="aurora-title">202606_MATH_DIF_15</div>
+            <p style="color:#cbd5e1; margin-top:0.5rem;">생동감 있는 오로라 메쉬 그라데이션 + 네온 아센트 카드</p>
+        </div>
+        <div class="grid">
+            <div class="aurora-card">
+                <h3>Question Statement</h3>
+                <div style="background:#fff; border-radius:8px; padding:1rem; margin:1rem 0;">
+                    <img src="file:///c:/Users/packr/Claude/kice-math-agent-infra/storage/assets/202606_MATH_DIF_15_fig.png" style="max-width:100%;">
+                </div>
+            </div>
+            <div class="aurora-card">
+                <h3>8-Axis Analysis Highlights</h3>
+                <div style="margin-top:1rem; padding:1rem; background:rgba(236,72,153,0.1); border-left:4px solid #ec4899; border-radius:6px;">
+                    <strong>Symbolic Model:</strong> $f(x) = \frac{1}{4}x^2(x-3) \implies f(6)=27$
+                </div>
+                <div style="margin-top:1rem; padding:1rem; background:rgba(59,130,246,0.1); border-left:4px solid #3b82f6; border-radius:6px;">
+                    <strong>Verification:</strong> Choice ④ 27 (ASSERT PASS)
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

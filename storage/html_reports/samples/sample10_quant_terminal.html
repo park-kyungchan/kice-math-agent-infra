@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Sample 10: Bloomberg Quant Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #000000; color: #ffb000; font-family: 'JetBrains Mono', monospace; padding: 1.5rem; font-size: 0.9rem; }
+        .quant-bar { background: #1a1400; border: 1px solid #ffb000; padding: 0.75rem 1rem; display: flex; justify-content: space-between; margin-bottom: 1rem; }
+        .ticker { color: #00e5ff; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .box { border: 1px solid #ffb000; padding: 1rem; background: #0a0800; }
+        .green { color: #00ff66; }
+        .white { color: #ffffff; }
+    </style>
+</head>
+<body>
+    <div class="quant-bar">
+        <div>[BLOOMBERG QUANT MATH TERMINAL v2.2] <span class="ticker">202606_MATH_DIF_15</span></div>
+        <div>SLA: <span class="green">0.005ms</span> | LATENCY: <span class="green">REALTIME</span></div>
+    </div>
+    <div class="grid">
+        <div class="box">
+            <div style="border-bottom:1px solid #ffb000; padding-bottom:0.4rem; margin-bottom:0.75rem;">INPUT_DATA_STREAM</div>
+            <div class="white">상수항이 0인 삼차함수 f(x)가 다음 조건을 만족시킨다.</div>
+            <div style="margin-top:0.5rem;">(가) int[p, p+3] |f| != |int[p, p+3] f| -&gt; 0 &lt; p &lt; 3</div>
+            <div>(나) int[0, 3] |f+q| != |int[0, 3] (f+q)| -&gt; 0 &lt; q &lt; 1</div>
+        </div>
+        <div class="box">
+            <div style="border-bottom:1px solid #ffb000; padding-bottom:0.4rem; margin-bottom:0.75rem;">AXIS_SOLVER_METRICS</div>
+            <div>[AXIS_1] <span class="white">12수학II02-03 (극값과 미분가능성)</span></div>
+            <div>[AXIS_3] <span class="white">f(x) = 1/4 * x^2 * (x-3)</span></div>
+            <div>[AXIS_5] <span class="green">VERIFIED_CHOICE_4 (27)</span></div>
+        </div>
+    </div>
+</body>
+</html>

@@ -154,6 +154,23 @@ def render_dynamic_tree(obj: Any, key_name: str = "", depth: int = 0) -> str:
         escaped_val = html.escape(val_str)
         return f'<span class="tree-leaf" data-key="{key_name}">{escaped_val}</span>'
 
+import base64
+
+def convert_image_to_base64_data_uri(image_path: str) -> Optional[str]:
+    """Converts a local PNG/JPEG image file to a self-contained Base64 Data URI."""
+    if not image_path or not os.path.exists(image_path):
+        return None
+    try:
+        with open(image_path, 'rb') as f:
+            data = f.read()
+        if not data:
+            return None
+        encoded = base64.b64encode(data).decode('utf-8')
+        mime_type = 'image/png' if image_path.lower().endswith('.png') else 'image/jpeg'
+        return f"data:{mime_type};base64,{encoded}"
+    except Exception:
+        return None
+
 class DualTargetReportWriter:
     """Handles atomic dual-target writing of validated HTML reports."""
 
@@ -216,20 +233,22 @@ class HTMLReportBuilder:
         asset_image_url = item_data.get('asset_image_url', '')
         axes = item_data.get('axes', {})
 
-        has_asset = bool(asset_image_url)
-        axis4 = axes.get('Axis_4', {})
-        has_backtrack = bool(axis4.get('backtrack_log'))
-
         # Dynamic Layout Engine Construction
         dynamic_axes_tree = render_dynamic_tree(axes, key_name="axes")
+
+        # Process Asset Image (Base64 Data URI for 100% Guaranteed Browser Rendering)
+        img_src = convert_image_to_base64_data_uri(asset_image_url) if asset_image_url else None
+        if not img_src and asset_image_url:
+            img_src = f"file:///{asset_image_url.replace('\\', '/')}"
+        has_asset = bool(img_src)
 
         # Dynamic Question Header & Split Layout
         if has_asset:
             question_block = f"""
-            <div class="notion-split-grid" data-key="asset_image_url">
+            <div class="notion-split-grid" data-key="asset_image_url" data-asset-url="{html.escape(str(asset_image_url))}">
                 <div class="notion-card">
                     <div class="card-label">📷 원본 평가원 자산 이미지</div>
-                    <img src="{asset_image_url}" alt="Diagram Asset" style="max-width:100%; border-radius:6px; border:1px solid #e3e3e1;">
+                    <img src="{img_src}" data-asset-url="{html.escape(str(asset_image_url))}" alt="Diagram Asset" style="max-width:100%; border-radius:6px; border:1px solid #e3e3e1;">
                 </div>
                 <div class="notion-card" data-key="latex_content">
                     <div class="card-label">📝 KaTeX 파싱 명제 원문</div>

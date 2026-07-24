@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Sample 1: Modern Dark Glassmorphism Bento Grid</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        body { background: #0b0f19; color: #f8fafc; font-family: 'Inter', 'Noto Sans KR', sans-serif; padding: 2rem; }
+        .header { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); padding: 1.5rem; border-radius: 16px; margin-bottom: 1.5rem; }
+        .title { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #fff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .grid { display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; }
+        .card { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 1.5rem; }
+        .bento { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        .bento-card { background: rgba(30, 41, 59, 0.5); border-radius: 12px; padding: 1.2rem; border-left: 4px solid #8b5cf6; }
+        .badge { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; padding: 0.25rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span class="badge">SAMPLE 1: DARK GLASSMORPHISM</span>
+        <div class="title">2026학년도 6월 모의평가 15번 (202606_MATH_DIF_15)</div>
+        <p style="color:#94a3b8; margin-top:0.4rem;">다크 글래스모피즘 + 좌측 원문 고정 레일 + 우측 Bento Grid 아키텍처</p>
+    </div>
+    <div class="grid">
+        <div class="card">
+            <h3>📄 문항 원문 및 자산</h3>
+            <div style="background:#fff; border-radius:8px; padding:1rem; margin:1rem 0;">
+                <img src="file:///c:/Users/packr/Claude/kice-math-agent-infra/storage/assets/202606_MATH_DIF_15_fig.png" style="max-width:100%;">
+            </div>
+            <p>상수항이 0인 삼차함수 $f(x)$에 대하여 $f(6)$의 값은?</p>
+            <div style="margin-top:1rem; font-weight:700; color:#10b981;">정답: ④번 (27)</div>
+        </div>
+        <div class="bento">
+            <div class="bento-card" style="border-color:#10b981;">
+                <h4>Axis 1: Curriculum</h4>
+                <p style="font-size:0.9rem; color:#cbd5e1; margin-top:0.5rem;">[12수학II02-03] 함수의 극값과 미분가능성</p>
+            </div>
+            <div class="bento-card" style="border-color:#f59e0b;">
+                <h4>Axis 2: Raw Parsing</h4>
+                <p style="font-size:0.9rem; color:#cbd5e1; margin-top:0.5rem;">(가) $p \in (0, 3)$, (나) $q \in (0, 1)$</p>
+            </div>
+            <div class="bento-card" style="border-color:#6366f1;">
+                <h4>Axis 3: Symbolic Model</h4>
+                <p style="font-size:0.9rem; color:#cbd5e1; margin-top:0.5rem;">$f(x) = \frac{1}{4}x^2(x-3) \implies f(6)=27$</p>
+            </div>
+            <div class="bento-card" style="border-color:#f43f5e;">
+                <h4>Axis 5: Traps Matrix</h4>
+                <p style="font-size:0.9rem; color:#cbd5e1; margin-top:0.5rem;">Choice 1: DIST_CASE_SIGN (18)</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

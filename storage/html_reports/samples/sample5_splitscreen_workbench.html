@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Sample 5: IDE Split-Screen Solver Workbench</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        body { background: #0d1117; color: #c9d1d9; font-family: 'Inter', sans-serif; height: 100vh; margin: 0; display: flex; flex-direction: column; }
+        .ide-top { background: #161b22; border-bottom: 1px solid #30363d; padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .ide-split { display: flex; flex: 1; overflow: hidden; }
+        .pane-left { width: 45%; border-right: 1px solid #30363d; padding: 1.5rem; overflow-y: auto; background: #0d1117; }
+        .pane-right { width: 55%; padding: 1.5rem; overflow-y: auto; background: #161b22; }
+        .code-box { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 1rem; font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #79c0ff; }
+        .tree-item { margin-left: 1rem; border-left: 1px solid #30363d; padding-left: 0.75rem; margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="ide-top">
+        <div style="font-weight:700; color:#58a6ff;">SAMPLE 5: IDE SPLIT-SCREEN SOLVER WORKBENCH (202606_MATH_DIF_15)</div>
+        <div style="font-size:0.8rem; color:#8b949e;">MODE: SPLIT_PANEL_INSPECTION</div>
+    </div>
+    <div class="ide-split">
+        <div class="pane-left">
+            <h3 style="color:#58a6ff; font-size:1rem; margin-bottom:1rem;">[LEFT PANE: QUESTION ASSET & TEX]</h3>
+            <div style="background:#fff; border-radius:6px; padding:1rem; margin-bottom:1rem;">
+                <img src="file:///c:/Users/packr/Claude/kice-math-agent-infra/storage/assets/202606_MATH_DIF_15_fig.png" style="max-width:100%;">
+            </div>
+            <div class="code-box">
+                (가) \int_{p}^{p+3} |f(x)| dx \neq |\int_{p}^{p+3} f(x) dx| (0 &lt; p &lt; 3)<br>
+                (나) \int_{0}^{3} |f(x)+q| dx \neq |\int_{0}^{3} (f(x)+q) dx| (0 &lt; q &lt; 1)
+            </div>
+        </div>
+        <div class="pane-right">
+            <h3 style="color:#7ed321; font-size:1rem; margin-bottom:1rem;">[RIGHT PANE: 8-AXIS SCHEMA INSPECTOR]</h3>
+            <div class="tree-item">
+                <span style="color:#79c0ff; font-weight:700;">Axis_1_Curriculum:</span> [12수학II02-03] 함수의 극값과 미분가능성
+            </div>
+            <div class="tree-item">
+                <span style="color:#79c0ff; font-weight:700;">Axis_3_Symbolic_Modeling:</span> $f(x) = \frac{1}{4}x^2(x-3) \implies f(6)=27$
+            </div>
+            <div class="tree-item">
+                <span style="color:#79c0ff; font-weight:700;">Axis_5_Traps_Verification:</span> Choice ④ (27) - VERIFIED_PASS
+            </div>
+            <div class="tree-item">
+                <span style="color:#79c0ff; font-weight:700;">Axis_6_Genealogy:</span> Precedent -> 202106_MATH_DIF_22
+            </div>
+        </div>
+    </div>
+</body>
+</html>

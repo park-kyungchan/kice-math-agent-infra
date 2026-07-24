@@ -26,6 +26,7 @@ def main():
     parser.add_argument("--axes", type=str, help="Comma-separated list of axes (e.g. Axis_1,Axis_3)")
     parser.add_argument("--summary", action="store_true", help="Output short summary instead of full JSON")
     parser.add_argument("--html", action="store_true", help="Generate 100% complete HTML report artifact")
+    parser.add_argument("--eval", action="store_true", help="Run 4-Tier Automated Eval Harness on HTML report")
 
     args = parser.parse_args()
     fetcher = QuestionFetcher()
@@ -34,6 +35,13 @@ def main():
 
     if args.item:
         item = fetcher.get_question(args.item, axes=selected_axes)
+
+        if args.eval:
+            from pipeline.report_generator.eval_html import evaluate_item_html_report
+            eval_res = evaluate_item_html_report(args.item)
+            print(json.dumps(eval_res, ensure_ascii=False, indent=2))
+            return
+
         if args.html:
             from pipeline.report_generator.html_builder import HTMLReportBuilder
             builder = HTMLReportBuilder()

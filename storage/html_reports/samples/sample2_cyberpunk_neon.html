@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Sample 2: Cyberpunk Neon Math Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        body { background: #050811; color: #06b6d4; font-family: 'Fira Code', 'Noto Sans KR', monospace; padding: 2rem; }
+        .cyber-header { border: 1px solid #06b6d4; background: rgba(6, 182, 212, 0.05); padding: 1.5rem; border-radius: 4px; box-shadow: 0 0 15px rgba(6, 182, 212, 0.2); margin-bottom: 2rem; }
+        .cyber-title { font-size: 1.8rem; color: #38bdf8; text-shadow: 0 0 8px rgba(56, 189, 248, 0.6); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .cyber-box { border: 1px solid #1e293b; background: #090e1a; padding: 1.5rem; border-radius: 4px; }
+        .neon-purple { color: #c084fc; text-shadow: 0 0 5px rgba(192, 132, 252, 0.5); }
+        .neon-green { color: #34d399; text-shadow: 0 0 5px rgba(52, 211, 153, 0.5); }
+        .btn-neon { background: transparent; border: 1px solid #34d399; color: #34d399; padding: 0.5rem 1rem; cursor: pointer; font-family: inherit; }
+    </style>
+</head>
+<body>
+    <div class="cyber-header">
+        <div style="font-size:0.8rem; color:#64748b;">// SAMPLE 2: CYBERPUNK NEON DASHBOARD</div>
+        <div class="cyber-title">> ITEM_ID: 202606_MATH_DIF_15</div>
+        <p style="color:#94a3b8;">네온 사이버펑크 터미널 스타일 + 수식 텍스트 글로우 디스플레이</p>
+    </div>
+    <div class="grid">
+        <div class="cyber-box">
+            <h3 class="neon-purple">[SYSTEM_INPUT_QUESTION]</h3>
+            <p style="color:#e2e8f0; margin-top:1rem;">상수항이 0인 삼차함수 $f(x)$가 다음 조건을 만족시킨다...</p>
+            <div style="margin-top:1.5rem;">
+                <button class="btn-neon">VERIFIED_ANSWER: Choice ④ (27)</button>
+            </div>
+        </div>
+        <div class="cyber-box">
+            <h3 class="neon-green">[8_AXIS_SOLVER_OUTPUT]</h3>
+            <pre style="color:#94a3b8; font-size:0.85rem; margin-top:1rem;">
+{
+  "Axis_1": "12수학II02-03 (극값과 미분가능성)",
+  "Axis_3": "f(x) = 1/4 * x^2 * (x - 3)",
+  "Axis_4": "x=2 극솟값 -1 (VALID_PATH)",
+  "Axis_5": "ASSERT_VERIFIED_PASS (27)"
+}
+            </pre>
+        </div>
+    </div>
+</body>
+</html>

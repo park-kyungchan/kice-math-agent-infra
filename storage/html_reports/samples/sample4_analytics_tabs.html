@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Sample 4: Executive Multi-Tab SaaS Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        body { background: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; padding: 2rem; }
+        .saas-header { background: #1e293b; border-radius: 12px; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .saas-title { font-size: 1.5rem; font-weight: 700; }
+        .nav-tabs { display: flex; gap: 0.5rem; background: #0f172a; padding: 0.4rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #334155; }
+        .tab-item { padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; color: #94a3b8; cursor: pointer; }
+        .tab-item.active { background: #3b82f6; color: #fff; }
+        .tab-panel { background: #1e293b; border-radius: 12px; padding: 1.5rem; min-height: 300px; }
+        .badge-stat { background: rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 0.3rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <div class="saas-header">
+        <div>
+            <span class="badge-stat">SAMPLE 4: SAAS MULTI-TAB DASHBOARD</span>
+            <div class="saas-title" style="margin-top:0.4rem;">202606_MATH_DIF_15 Evaluation Workbench</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:0.8rem; color:#94a3b8;">VERIFICATION SCORE</div>
+            <div style="font-size:1.5rem; font-weight:800; color:#34d399;">100.0% PASS</div>
+        </div>
+    </div>
+
+    <div class="nav-tabs">
+        <div class="tab-item active">Overview</div>
+        <div class="tab-item">Axis 1: Curriculum</div>
+        <div class="tab-item">Axis 3: Symbolic</div>
+        <div class="tab-item">Axis 5: Traps</div>
+        <div class="tab-item">Axis 6: Genealogy</div>
+        <div class="tab-item">Axis 8: Knowledge Graph</div>
+    </div>
+
+    <div class="tab-panel">
+        <h3>Overview Summary</h3>
+        <p style="color:#94a3b8; margin-top:0.5rem;">삼차함수 $f(x) = \frac{1}{4}x^2(x-3)$의 정적분 절댓값 등식 성립 조건 및 $f(6)=27$ 정답 산출 확인.</p>
+        <div style="margin-top:1.5rem; display:flex; gap:1rem;">
+            <div style="background:#0f172a; padding:1rem; border-radius:8px; flex:1;">
+                <div style="font-size:0.8rem; color:#64748b;">TARGET EXPRESSION</div>
+                <div style="font-size:1.2rem; font-weight:700; color:#38bdf8;">f(6) = 27</div>
+            </div>
+            <div style="background:#0f172a; padding:1rem; border-radius:8px; flex:1;">
+                <div style="font-size:0.8rem; color:#64748b;">CORRECT OPTION</div>
+                <div style="font-size:1.2rem; font-weight:700; color:#34d399;">Choice ④</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

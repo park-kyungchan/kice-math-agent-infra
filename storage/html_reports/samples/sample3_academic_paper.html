@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Sample 3: Academic Journal Clean Paper Theme</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Noto+Serif+KR:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        body { background: #f8fafc; color: #1e293b; font-family: 'Noto Serif KR', serif; padding: 3rem; max-width: 1100px; margin: 0 auto; line-height: 1.8; }
+        .paper-header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 1.5rem; margin-bottom: 2rem; }
+        .paper-title { font-family: 'Cinzel', serif; font-size: 2rem; font-weight: 700; color: #0f172a; }
+        .paper-meta { font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #64748b; margin-top: 0.5rem; }
+        .theorem-box { background: #f1f5f9; border-left: 4px solid #0f172a; padding: 1.2rem; margin: 1.5rem 0; font-family: 'Inter', sans-serif; }
+        .table-eval { width: 100%; border-collapse: collapse; margin-top: 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; }
+        .table-eval th, .table-eval td { border: 1px solid #cbd5e1; padding: 0.75rem; text-align: left; }
+        .table-eval th { background: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div class="paper-header">
+        <div style="font-family:'Inter'; font-size:0.8rem; color:#475569; font-weight:600;">SAMPLE 3: ACADEMIC JOURNAL PAPER THEME</div>
+        <div class="paper-title">KICE Mathematics Item Analysis Report</div>
+        <div class="paper-meta">Item ID: 202606_MATH_DIF_15 | CSAT June Mock 2026 Item #15</div>
+    </div>
+    
+    <h2>1. Item Statement & Definition</h2>
+    <p>상수항이 $0$인 삼차함수 $f(x)$가 다음 조건을 만족시킨다.</p>
+    <div class="theorem-box">
+        <strong>[Theorem Conditions]</strong><br>
+        (가) $\int_{p}^{p+3} |f(x)| dx \neq \left| \int_{p}^{p+3} f(x) dx \right| \implies 0 < p < 3$<br>
+        (나) $\int_{0}^{3} |f(x)+q| dx \neq \left| \int_{0}^{3} (f(x)+q) dx \right| \implies 0 < q < 1$
+    </div>
+
+    <h2>2. Multi-Dimensional Taxonomy Analysis (8 Axes)</h2>
+    <table class="table-eval">
+        <tr><th>Axis Domain</th><th>Primary Classification</th><th>Analytical Proof Result</th></tr>
+        <tr><td>Axis 1: Curriculum</td><td>[12수학II02-03]</td><td>다항함수의 극값 및 정적분의 성질 결합</td></tr>
+        <tr><td>Axis 3: Symbolic Model</td><td>$f(x) = \frac{1}{4}x^2(x-3)$</td><td>$x=0$ 중근, $x=2$ 극솟값 $-1$ 도출</td></tr>
+        <tr><td>Axis 5: Distractor Matrix</td><td>Choice ④ (27)</td><td>Verified Correct Answer ($f(6)=27$)</td></tr>
+    </table>
+</body>
+</html>
