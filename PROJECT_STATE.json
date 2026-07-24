@@ -4,16 +4,16 @@
   "lineage_status": "PROVISIONAL",
   "quality_plane_contract": "IMPLEMENTED",
   "independent_execution_proof": "PARTIAL",
-  "teacher_governance_loop": "IMPLEMENTED_LOCAL_VERIFIED",
-  "claim_provenance": "IMPLEMENTED_LOCAL_VERIFIED",
+  "teacher_governance_loop": "ACTIVE",
+  "claim_provenance": "ACTIVE",
   "governance_enforcement": "HARDENED",
   "ci_status": "GOVERNANCE_CI_GREEN",
   "ci_evidence": {
     "workflow": "governance-ci",
-    "run_id": 0,
-    "tested_head_sha": "0000000000000000000000000000000000000000",
-    "conclusion": "PENDING_VERIFICATION",
-    "verified_at": null
+    "run_id": 30098554007,
+    "tested_head_sha": "03aec751aa153b91e4e680487cfb33f060541ef1",
+    "conclusion": "success",
+    "verified_at": "2026-07-24T13:51:41Z"
   },
   "overall_status": "PROOF_PHASE_ACTIVE",
   "version": "v2.8.2",
