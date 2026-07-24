@@ -2,7 +2,7 @@
 
 > **Deposit Metadata**  
 > - **Deposit Timestamp**: 2026-07-24  
-> - **Infrastructure Version**: `v2.0.0` (Master 8-Axis Flat Architecture)
+> - **Infrastructure Version**: `v2.1.0` (Master 8-Axis Flat Architecture & Zero-Token-Waste Protocol)
 > - **Target Repository**: [kice-math-agent-infra](https://github.com/park-kyungchan/kice-math-agent-infra.git)  
 > - **Workspace Path**: `C:\Users\packr\Claude\kice-math-agent-infra`  
 > - **Compatibility**: 100% Agent-Agnostic (Claude Code, OpenAI Codex, Antigravity/AGY, Gemini, Cursor, etc.)
@@ -57,7 +57,7 @@ To minimize context token consumption while achieving 100% precision in new agen
 1. **Order 1 (Entrypoint Overview)**: Read [ENTRYPOINT.md](ENTRYPOINT.md) and [MANIFEST.json](MANIFEST.json).
 2. **Order 2 (Taxonomy Spec & DDL)**: Read [docs/Taxonomy_Spec.md](docs/Taxonomy_Spec.md).
 3. **Order 3 (Master Router Spec)**: Read [pipeline/agents_spec/router_orchestrator_agent.md](pipeline/agents_spec/router_orchestrator_agent.md) & 100% English agent prompt specs in `pipeline/agents_spec/`.
-4. **Order 4 (Python Selective & Batch Fetcher)**: Use `QuestionFetcher` in `pipeline.query_engine.selective_fetcher`.
+4. **Order 4 (Python Selective & Batch Fetcher)**: Use `fetch_cli.py` or `QuestionFetcher` in `pipeline.query_engine.selective_fetcher`.
 
 ---
 
@@ -85,6 +85,21 @@ if precedent_id:
     print("Deep-Dive Precedent Item:", deep_dive_item['item_id'])
 ```
 
+---
+
+## 6. Critical Zero-Context Anti-Pattern Rules (Mandatory Enforcement)
+
+To prevent multi-turn delays, token waste, and encoding errors:
+
+1. **STRICTLY PROHIBITED**: Never execute inline shell commands (`python -c "..."`) with nested quotes or SQL strings in Windows PowerShell. This leads to quote escaping crashes (`SyntaxError`), CP949 encoding errors, user approval prompts, and token waste.
+2. **MANDATORY CLI TOOL**: Always use the standardized CLI fetcher `pipeline/query_engine/fetch_cli.py`:
+   ```powershell
+   # Instant 1-line item query without quote escaping (0.005ms SLA)
+   python pipeline/query_engine/fetch_cli.py --item 202606_MATH_DIF_15 --summary
+   python pipeline/query_engine/fetch_cli.py --exam 202606 --number 15
+   ```
+3. **ZERO TOKEN WASTE**: Rely on `fetch_cli.py` or script imports. Do NOT attempt raw shell DB exploration.
+
 ```powershell
 # Run Automated Test Suite
 python -m unittest discover -s tests -p "test_*.py"
@@ -93,3 +108,4 @@ python -m unittest discover -s tests -p "test_*.py"
 git status
 gh auth status
 ```
+
