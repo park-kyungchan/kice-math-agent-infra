@@ -12,14 +12,37 @@ LLM/agent-agnostic: `derived_by` is a JSON document
 — the model/vendor is descriptive data, never a code dependency.
 """
 import json
+import re
 import sqlite3
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
+# SSoT for the closed actor_type enum: defined once in review_state.py and
+# imported here rather than duplicated. Verified non-circular: review_state.py
+# only imports claim_provenance lazily, inside function bodies, never at
+# module load time (see review_state._write_transition_in_txn()).
+from pipeline.query_engine.review_state import ACTOR_TYPES
+
 CLAIM_TYPES = ("FACT", "INFERENCE", "ESTIMATE", "OPINION")
 AXES = tuple(f"Axis_{i}" for i in range(1, 9))
 HUMAN_REVIEW_STATUSES = ("UNREVIEWED", "REVIEW_REQUIRED", "HUMAN_VERIFIED", "HUMAN_REJECTED")
+
+# Axis_N -> axis_analysis flat column name. Matches
+# pipeline/query_engine/selective_fetcher.py's _format_question_row raw_axes
+# mapping and docs/Taxonomy_Spec.md §2 DDL exactly. Kept local (not imported
+# from selective_fetcher.py) because selective_fetcher.py already imports
+# FROM this module — importing the mapping the other way would cycle.
+AXIS_COLUMN: Dict[str, str] = {
+    "Axis_1": "axis1_curriculum",
+    "Axis_2": "axis2_raw_parsing",
+    "Axis_3": "axis3_symbolic_modeling",
+    "Axis_4": "axis4_contextual_tree",
+    "Axis_5": "axis5_traps_verification",
+    "Axis_6": "axis6_genealogy",
+    "Axis_7": "axis7_mutation",
+    "Axis_8": "axis8_knowledge_graph",
+}
 
 
 class ProvenanceError(Exception):
@@ -35,6 +58,34 @@ def _table_exists(conn: sqlite3.Connection) -> bool:
         "SELECT name FROM sqlite_master WHERE type='table' AND name='claim_provenance'"
     ).fetchone()
     return row is not None
+
+
+def _json_pointer_resolves(document: Any, pointer: str) -> bool:
+    """RFC 6901 JSON Pointer resolution check (stdlib only — jsonpointer is
+    not a declared project dependency; requirements.txt does not list it).
+    Returns True iff `pointer` resolves to SOME value inside `document`."""
+    if pointer == "":
+        return True
+    if not pointer.startswith("/"):
+        return False
+    current = document
+    for raw_token in pointer.split("/")[1:]:
+        token = raw_token.replace("~1", "/").replace("~0", "~")
+        if isinstance(current, dict):
+            if token not in current:
+                return False
+            current = current[token]
+        elif isinstance(current, list):
+            if token == "0" or re.fullmatch(r"[1-9][0-9]*", token):
+                idx = int(token)
+            else:
+                return False
+            if idx >= len(current):
+                return False
+            current = current[idx]
+        else:
+            return False
+    return True
 
 
 def record_claim(
@@ -66,14 +117,46 @@ def record_claim(
         raise ProvenanceError("statement must be non-empty")
     if not json_pointer or not json_pointer.startswith("/"):
         raise ProvenanceError("json_pointer must be an RFC 6901 pointer starting with '/'")
+    if not source_refs:
+        raise ProvenanceError(
+            "source_refs must be a non-empty list — a claim without a source is not a claim"
+        )
     if not derived_by or "actor_type" not in derived_by or "actor_id" not in derived_by:
         raise ProvenanceError("derived_by must include actor_type and actor_id")
+    if derived_by["actor_type"] not in ACTOR_TYPES:
+        raise ProvenanceError(
+            f"derived_by.actor_type must be one of {ACTOR_TYPES}, got {derived_by['actor_type']!r}"
+        )
+    if confidence_score is not None:
+        if isinstance(confidence_score, bool) or not isinstance(confidence_score, (int, float)):
+            raise ProvenanceError(f"confidence_score must be a number in [0.0, 1.0], got {confidence_score!r}")
+        if not (0.0 <= float(confidence_score) <= 1.0):
+            raise ProvenanceError(f"confidence_score must be within [0.0, 1.0], got {confidence_score!r}")
 
     item_row = conn.execute(
         "SELECT 1 FROM question_item WHERE item_id = ?", (item_id,)
     ).fetchone()
     if item_row is None:
         raise ProvenanceError(f"Item {item_id} not found")
+
+    axis_column = AXIS_COLUMN[axis]
+    axis_row = conn.execute(
+        f"SELECT {axis_column} FROM axis_analysis WHERE item_id = ?", (item_id,)
+    ).fetchone()
+    if axis_row is None or axis_row[0] is None:
+        raise ProvenanceError(
+            f"Axis {axis} has no recorded analysis for item {item_id}; cannot attach "
+            "a claim's json_pointer to a field that does not exist yet"
+        )
+    try:
+        axis_document = json.loads(axis_row[0])
+    except (json.JSONDecodeError, TypeError) as e:
+        raise ProvenanceError(f"Axis {axis} analysis for item {item_id} is not valid JSON: {e}")
+    if not _json_pointer_resolves(axis_document, json_pointer):
+        raise ProvenanceError(
+            f"json_pointer {json_pointer!r} does not resolve inside axis {axis} "
+            f"analysis for item {item_id}"
+        )
 
     claim = {
         "claim_id": f"CLM-{uuid.uuid4()}",
@@ -152,14 +235,19 @@ def get_claims_for_items(
     return out
 
 
-def set_human_review(
+def _set_human_review_in_txn(
     conn: sqlite3.Connection,
     item_id: str,
     status: str,
     event_id: Optional[str] = None,
 ) -> int:
-    """Link a teacher review outcome to all claims of an item.
-    Called by review_state.transition() on TEACHER_APPROVED / REJECTED."""
+    """Same UPDATE as set_human_review(), but operates on the CALLER's
+    already-open transaction and never calls conn.commit()/rollback() itself
+    (P0-3 fix). Used by review_state.transition() so the claim-provenance
+    linkage is folded into the SAME BEGIN IMMEDIATE transaction as the event
+    insert and question_item snapshot update, instead of a second,
+    separately-committed transaction that could leave the two durably
+    inconsistent if this write ever failed."""
     if status not in HUMAN_REVIEW_STATUSES:
         raise ProvenanceError(f"Unknown human_review_status: {status!r}")
     if not _table_exists(conn):
@@ -170,5 +258,19 @@ def set_human_review(
            WHERE item_id = ?""",
         (status, event_id, item_id),
     )
-    conn.commit()
     return cur.rowcount
+
+
+def set_human_review(
+    conn: sqlite3.Connection,
+    item_id: str,
+    status: str,
+    event_id: Optional[str] = None,
+) -> int:
+    """Link a teacher review outcome to all claims of an item, committing
+    immediately. Standalone public entry point — review_state.transition()
+    does NOT call this; it calls _set_human_review_in_txn() directly so the
+    write joins its own transaction instead of committing here (P0-3)."""
+    rowcount = _set_human_review_in_txn(conn, item_id, status, event_id)
+    conn.commit()
+    return rowcount

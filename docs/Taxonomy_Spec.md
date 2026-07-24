@@ -1,6 +1,6 @@
 # CSAT Mathematics Multi-Dimensional Analysis Architecture Specification (Taxonomy_Spec.md)
 
-This specification defines the **3-Layer 8-Axis Taxonomy Schema**, the SQLite Database DDL (analysis + governance tables), and the **Teacher Review State Machine** for zero-context agent reasoning and **Math Instructors** across **1,350 CSAT/KICE Mathematics questions (2015–2026)** (v2.8.1).
+This specification defines the **3-Layer 8-Axis Taxonomy Schema**, the SQLite Database DDL (analysis + governance tables), and the **Teacher Review State Machine** for zero-context agent reasoning and **Math Instructors** across **1,350 CSAT/KICE Mathematics questions (2015–2026)** (v2.8.2).
 
 > **SSoT rule (docs/SSOT_MAP.md):** this document is the single source of truth for DB schema, enums, and constraints. Any schema change lands here AND in an idempotent migration script in the same commit; `scripts/validate_ssot_consistency.py` gates drift between this DDL and the live database.
 
@@ -81,7 +81,7 @@ graph TD
 
 ---
 
-## 2. SQLite Entity Schema DDL (`storage/parsed_dataset.db`) — v2.8.1
+## 2. SQLite Entity Schema DDL (`storage/parsed_dataset.db`) — v2.8.2
 
 ```sql
 -- Tier 1: Exam Event
@@ -161,6 +161,20 @@ CREATE TABLE teacher_review_event (
     item_version INTEGER NOT NULL,
     created_at TEXT NOT NULL
 );
+
+-- P1-1 (v2.8.2): append-only enforcement — teacher_review_event rows may
+-- never be UPDATEd or DELETEd, not even by a raw connection.
+CREATE TRIGGER teacher_review_event_no_update
+BEFORE UPDATE ON teacher_review_event
+BEGIN
+    SELECT RAISE(ABORT, 'teacher_review_event is append-only: UPDATE forbidden');
+END;
+
+CREATE TRIGGER teacher_review_event_no_delete
+BEFORE DELETE ON teacher_review_event
+BEGIN
+    SELECT RAISE(ABORT, 'teacher_review_event is append-only: DELETE forbidden');
+END;
 
 -- Governance Table 2: Claim-level provenance (one row per claim, linked to
 -- a concrete axis field via RFC 6901 JSON Pointer; never synthesized)

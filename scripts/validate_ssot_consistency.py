@@ -91,6 +91,17 @@ def check_ddl(errors, db_path):
     ).fetchone()
     if ddl_row and 'review_status IN' not in (ddl_row[0] or '').replace('\n', ' '):
         errors.append('DDL: live question_item lacks review_status CHECK constraint')
+
+    # P1-1: verify the append-only triggers exist on the live DB (drift gate
+    # for the audit-immutability invariant, not just column sets).
+    trigger_rows = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='trigger' AND tbl_name='teacher_review_event'"
+    ).fetchall()
+    trigger_names = {r[0] for r in trigger_rows}
+    for required in ('teacher_review_event_no_update', 'teacher_review_event_no_delete'):
+        if required not in trigger_names:
+            errors.append(f'DDL: live DB missing append-only trigger {required} on teacher_review_event')
+
     conn.close()
 
 

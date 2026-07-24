@@ -4,13 +4,23 @@
   "lineage_status": "PROVISIONAL",
   "quality_plane_contract": "IMPLEMENTED",
   "independent_execution_proof": "PARTIAL",
-  "teacher_governance_loop": "ACTIVE",
-  "claim_provenance": "ACTIVE",
+  "teacher_governance_loop": "IMPLEMENTED_LOCAL_VERIFIED",
+  "claim_provenance": "IMPLEMENTED_LOCAL_VERIFIED",
+  "governance_enforcement": "HARDENED",
   "ci_status": "GOVERNANCE_CI_GREEN",
+  "ci_evidence": {
+    "workflow": "governance-ci",
+    "run_id": 0,
+    "tested_head_sha": "0000000000000000000000000000000000000000",
+    "conclusion": "PENDING_VERIFICATION",
+    "verified_at": null
+  },
   "overall_status": "PROOF_PHASE_ACTIVE",
-  "version": "v2.8.1",
+  "version": "v2.8.2",
   "_semantics": {
     "IMPLEMENTED_LOCAL_VERIFIED": "State machine / provenance enforced in code with local test evidence; ACTIVE requires the Acceptance Gate (green remote CI on a PR + SSoT consistency validator) to pass.",
+    "HARDENED": "v2.8.2 governance-enforcement hotfix: actor-policy transition gate (P0-1), claim-provenance input validation + same-transaction atomicity (P0-2/P0-3), append-only audit-trail triggers (P1-1), and reviewer-assignment hygiene on requeue (P1-2) are enforced in code with local test evidence. Does NOT cover Quality-Plane semantic fail-open behavior (judge default-pass on missing data, the 0.85 confidence threshold, unfiltered Axis_6 lineage traversal) — those are explicitly deferred to v2.9.0.",
+    "ci_evidence_placeholders": "run_id=0, tested_head_sha=the null SHA, conclusion=PENDING_VERIFICATION, and verified_at=null are DELIBERATE PLACEHOLDERS pending a real governance-ci run against the actual merge commit. The owner (or a CI step) MUST overwrite all four fields with the real GitHub Actions run_id, head SHA, conclusion, and verification timestamp at merge time. A conclusion of 'success' must never be pre-filled before that run has actually been observed — doing so is the exact CI self-attestation failure this field exists to prevent.",
     "authority": "This file is the single source of truth for dynamic project state; MANIFEST.json must reference, never duplicate, it."
   }
 }

@@ -68,6 +68,22 @@ CREATE TABLE IF NOT EXISTS teacher_review_event (
 );
 """
 
+TEACHER_REVIEW_EVENT_NO_UPDATE_TRIGGER_DDL = """
+CREATE TRIGGER IF NOT EXISTS teacher_review_event_no_update
+BEFORE UPDATE ON teacher_review_event
+BEGIN
+    SELECT RAISE(ABORT, 'teacher_review_event is append-only: UPDATE forbidden');
+END;
+"""
+
+TEACHER_REVIEW_EVENT_NO_DELETE_TRIGGER_DDL = """
+CREATE TRIGGER IF NOT EXISTS teacher_review_event_no_delete
+BEFORE DELETE ON teacher_review_event
+BEGIN
+    SELECT RAISE(ABORT, 'teacher_review_event is append-only: DELETE forbidden');
+END;
+"""
+
 CLAIM_PROVENANCE_DDL = """
 CREATE TABLE IF NOT EXISTS claim_provenance (
     claim_id TEXT PRIMARY KEY,
@@ -168,6 +184,13 @@ def run_migration(db_path: str = DEFAULT_DB_PATH, backup: bool = True) -> dict:
                 print(f"  - Created table {name}")
             else:
                 print(f"  - Table {name} already exists")
+
+        # P1-1 fix: append-only triggers (idempotent; also (re)created lazily
+        # by review_state.ensure_event_schema() on first use — created here
+        # too so a freshly migrated DB is immutable-audit-safe even before
+        # any fetch_cli.py --review-* command has run).
+        cur.execute(TEACHER_REVIEW_EVENT_NO_UPDATE_TRIGGER_DDL)
+        cur.execute(TEACHER_REVIEW_EVENT_NO_DELETE_TRIGGER_DDL)
 
         for ddl in INDEX_DDL:
             cur.execute(ddl)
