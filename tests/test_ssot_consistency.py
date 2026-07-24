@@ -46,15 +46,23 @@ class TestSsotConsistency(unittest.TestCase):
     def test_project_state_does_not_overclaim(self):
         """v2.8.2: 'ACTIVE' previously overclaimed a passed remote-CI
         Acceptance Gate that had never actually happened (P1-3).
-        teacher_governance_loop must report the honest pre-Acceptance-Gate
-        status until a real green governance-ci run is bound via
-        ci_evidence."""
+        teacher_governance_loop must track ci_evidence honestly: ACTIVE is
+        only legitimate once ci_evidence.conclusion is a real 'success';
+        anything else (including the PENDING_VERIFICATION placeholder) must
+        report the pre-Acceptance-Gate IMPLEMENTED_LOCAL_VERIFIED status.
+        This is checked as a live invariant tied to ci_evidence, not a fixed
+        string -- v2.8.2's first release cut this test against the
+        pre-merge placeholder state and hardcoded the placeholder-era
+        expectation, which broke the instant the Acceptance Gate was
+        legitimately satisfied post-merge. Re-fixed here so it never goes
+        stale again in either direction."""
         state = json.loads(open(v.PROJECT_STATE, encoding='utf-8').read())
+        evidence = state.get('ci_evidence', {})
+        expected = 'ACTIVE' if evidence.get('conclusion') == 'success' else 'IMPLEMENTED_LOCAL_VERIFIED'
         self.assertEqual(
-            state.get('teacher_governance_loop'), 'IMPLEMENTED_LOCAL_VERIFIED',
-            'IMPLEMENTED_LOCAL_VERIFIED expected until the Acceptance Gate '
-            '(green remote CI bound via ci_evidence) actually passes; ACTIVE '
-            'would overclaim an unverified remote-CI run'
+            state.get('teacher_governance_loop'), expected,
+            f"teacher_governance_loop must be {expected!r} given ci_evidence.conclusion="
+            f"{evidence.get('conclusion')!r}; ACTIVE without a bound green run would overclaim"
         )
 
     def test_ci_evidence_binds_run_id_and_head_sha(self):
