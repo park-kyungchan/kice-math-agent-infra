@@ -18,6 +18,14 @@ class TestSelectiveFetcher(unittest.TestCase):
         self.assertEqual(res['item_id'], '202411_MATH_DIF_22')
         self.assertEqual(res['score'], 4)
         self.assertIn('axes', res)
+        self.assertIn('review_status', res)
+        self.assertIn('reviewer_id', res)
+        self.assertIn('review_history_json', res)
+        
+        axis_3 = res['axes'].get('Axis_3', {})
+        if isinstance(axis_3, dict):
+            self.assertIn('provenance', axis_3)
+            self.assertIsInstance(axis_3['provenance'], list)
 
     def test_selective_axes_filter(self):
         res = self.fetcher.get_question('202411_MATH_DIF_22', axes=['Axis_1', 'Axis_2'])

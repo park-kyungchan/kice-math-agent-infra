@@ -1,7 +1,15 @@
 import os
 import sqlite3
 import json
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, TypedDict, Literal
+
+class ClaimProvenance(TypedDict):
+    claim_type: Literal['FACT', 'INFERENCE', 'ESTIMATE', 'OPINION']
+    source: Literal['ORIGINAL_EXAM_TEXT', 'SYMPY_SOLVER', 'AGENT_REASONING', 'TEACHER_INPUT']
+    confidence_score: float
+    counter_evidence: List[str]
+    human_verified: bool
+
 
 LAYER_MAPPING = {
     'data_infrastructure': ['Axis_1', 'Axis_2'],
@@ -109,6 +117,9 @@ class QuestionFetcher:
             'score': row['score'],
             'answer': row['answer'] if 'answer' in row.keys() else 0,
             'correct_rate': row['correct_rate'] if 'correct_rate' in row.keys() else None,
+            'review_status': row['review_status'] if 'review_status' in row.keys() else 'AUTO_ANALYSIS_COMPLETED',
+            'reviewer_id': row['reviewer_id'] if 'reviewer_id' in row.keys() else None,
+            'review_history_json': row['review_history_json'] if 'review_history_json' in row.keys() else '[]',
             'latex_content': row['latex_content'],
             'asset_image_url': row['asset_image_url'],
             'axes': {}
@@ -132,6 +143,18 @@ class QuestionFetcher:
                     data['axes'][ax_key] = json.loads(raw_val)
                 except Exception:
                     data['axes'][ax_key] = raw_val
+
+            # Integrate ClaimProvenance into Axis 3, 5, 6
+            if ax_key in ('Axis_3', 'Axis_5', 'Axis_6'):
+                if ax_key not in data['axes'] or not isinstance(data['axes'].get(ax_key), dict):
+                    if ax_key in data['axes'] and isinstance(data['axes'][ax_key], str):
+                        # if it's somehow a string, wrap it or ignore
+                        pass
+                    else:
+                        data['axes'][ax_key] = data['axes'].get(ax_key, {})
+                if isinstance(data['axes'].get(ax_key), dict):
+                    if 'provenance' not in data['axes'][ax_key]:
+                        data['axes'][ax_key]['provenance'] = []
 
         return data
 
@@ -158,6 +181,7 @@ class QuestionFetcher:
                     sql = f'''
                         SELECT 
                             q.item_id, q.exam_id, q.track, q.item_number, q.score, q.answer, q.correct_rate,
+                            q.review_status, q.reviewer_id, q.review_history_json,
                             q.latex_content, q.asset_image_url,
                             a.axis1_curriculum, a.axis2_raw_parsing, a.axis3_symbolic_modeling,
                             a.axis4_contextual_tree, a.axis5_traps_verification, a.axis6_genealogy,

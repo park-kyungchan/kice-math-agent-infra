@@ -30,6 +30,12 @@ def main():
     parser.add_argument("--summary", action="store_true", help="Output short summary instead of full JSON")
     parser.add_argument("--html", action="store_true", help="Generate 100% complete HTML report artifact")
     parser.add_argument("--eval", action="store_true", help="Run 4-Tier Automated Eval Harness on HTML report")
+    parser.add_argument("--review-queue", action="store_true", help="List items requiring review (REVIEW_REQUIRED or QA flag)")
+    parser.add_argument("--review-approve", action="store_true", help="Transition status of specified --item to TEACHER_APPROVED")
+    parser.add_argument("--review-revise", action="store_true", help="Transition status to TEACHER_REVISED")
+    parser.add_argument("--review-status", action="store_true", help="Print summary counts of items across all review states")
+    parser.add_argument("--reviewer", type=str, help="Reviewer ID for review actions")
+    parser.add_argument("--notes", type=str, help="Notes for review revision")
 
     args = parser.parse_args()
     fetcher = QuestionFetcher()
@@ -53,6 +59,57 @@ def main():
             print(json.dumps(summary_list, ensure_ascii=False, indent=2))
         else:
             print(json.dumps(unverified_items, ensure_ascii=False, indent=2))
+        return
+
+    if args.review_queue:
+        unverified_items = fetcher.get_unverified_questions()
+        print(json.dumps([{"item_id": u["item_id"], "review_status": u.get("review_status")} for u in unverified_items], ensure_ascii=False, indent=2))
+        return
+
+    if args.review_approve:
+        if not args.item or not args.reviewer:
+            print("Error: --item and --reviewer are required for --review-approve")
+            return
+        with fetcher.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT review_history_json FROM question_item WHERE item_id = ?", (args.item,))
+            row = cur.fetchone()
+            if row:
+                history = json.loads(row[0] or '[]')
+                import datetime
+                history.append({"action": "APPROVE", "reviewer": args.reviewer, "timestamp": datetime.datetime.utcnow().isoformat()})
+                cur.execute("UPDATE question_item SET review_status = 'TEACHER_APPROVED', reviewer_id = ?, review_history_json = ? WHERE item_id = ?", (args.reviewer, json.dumps(history), args.item))
+                conn.commit()
+                print(f"Item {args.item} approved by {args.reviewer}.")
+            else:
+                print(f"Item {args.item} not found.")
+        return
+
+    if args.review_revise:
+        if not args.item or not args.reviewer or not args.notes:
+            print("Error: --item, --reviewer, and --notes are required for --review-revise")
+            return
+        with fetcher.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT review_history_json FROM question_item WHERE item_id = ?", (args.item,))
+            row = cur.fetchone()
+            if row:
+                history = json.loads(row[0] or '[]')
+                import datetime
+                history.append({"action": "REVISE", "reviewer": args.reviewer, "notes": args.notes, "timestamp": datetime.datetime.utcnow().isoformat()})
+                cur.execute("UPDATE question_item SET review_status = 'TEACHER_REVISED', reviewer_id = ?, review_history_json = ? WHERE item_id = ?", (args.reviewer, json.dumps(history), args.item))
+                conn.commit()
+                print(f"Item {args.item} marked for revision by {args.reviewer}. Notes: {args.notes}")
+            else:
+                print(f"Item {args.item} not found.")
+        return
+
+    if args.review_status:
+        with fetcher.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT review_status, COUNT(*) FROM question_item GROUP BY review_status")
+            counts = dict(cur.fetchall())
+            print(json.dumps(counts, indent=2))
         return
 
     if args.item:

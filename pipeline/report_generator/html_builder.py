@@ -296,6 +296,9 @@ class HTMLReportBuilder:
         score = item_data.get('score', 0)
         answer = item_data.get('answer', 0)
         correct_rate = item_data.get('correct_rate')
+        review_status = item_data.get('review_status', 'AUTO_ANALYSIS_COMPLETED')
+        reviewer_id = item_data.get('reviewer_id')
+        review_history_json = item_data.get('review_history_json', '[]')
         latex_content = item_data.get('latex_content', '')
         asset_image_url = item_data.get('asset_image_url', '')
         axes = item_data.get('axes', {})
@@ -525,6 +528,9 @@ class HTMLReportBuilder:
             <span class="pill" data-key="item_number">Item #{item_number}</span>
             <span class="pill" data-key="score">{score} Points</span>
             <span class="pill pill-green" data-key="correct_rate">Correct Rate: {correct_rate if correct_rate is not None else 'N/A'}</span>
+            <span class="pill" data-key="review_status">Review: {html.escape(str(review_status))}</span>
+            <span class="pill" data-key="reviewer_id">Reviewer: {html.escape(str(reviewer_id)) if reviewer_id else 'None'}</span>
+            <span class="pill" data-key="review_history_json" style="display:none;">{html.escape(str(review_history_json))}</span>
         </div>
     </header>
 

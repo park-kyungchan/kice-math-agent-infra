@@ -1,6 +1,6 @@
 {
   "project_name": "CSAT Mathematics Zero-Context Agent Infra",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "target_domain": "2027 KICE Mock & CSAT Mathematics (Common + Calculus, Geometry, Prob)",
   "target_personas": ["Zero-Context Autonomous AI Agents", "Math Instructors & Curriculum Developers"],
   "architecture": "3-Layer 8-Axis Taxonomy Architecture & Semantic Eval Harness",
@@ -9,14 +9,20 @@
     "total_pdf_papers": 45,
     "total_diagram_png_assets": 1350,
     "db_location": "storage/parsed_dataset.db",
-    "eval_gate_score": "100.0% PASS (3-Layer Taxonomy & Semantic Eval Harness v2.7.0)",
-    "eval_status": "PROVISIONAL Matrix Active (v2.7.0)"
+    "eval_gate_score": "100.0% PASS (3-Layer Taxonomy & Semantic Eval Harness v2.8.0)",
+    "eval_status": "PROVISIONAL Matrix Active (v2.8.0)"
   },
   "context_loading_entrypoints": {
     "order_1_manifest": "ENTRYPOINT.md",
     "order_2_taxonomy_spec": "docs/Taxonomy_Spec.md",
+    "order_2_ssot_map": "docs/SSOT_MAP.md",
     "order_3_master_router": "pipeline/agents_spec/router_orchestrator_agent.md",
     "order_4_python_fetcher": "pipeline/query_engine/selective_fetcher.py"
+  },
+  "governance_documents": {
+    "ssot_map": "docs/SSOT_MAP.md",
+    "stakeholder_intent": "docs/STAKEHOLDER_INTENT.md",
+    "project_state": "PROJECT_STATE.json"
   },
   "taxonomy_layers": {
     "layer_1_preprocessing": [

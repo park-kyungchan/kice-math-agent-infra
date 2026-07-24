@@ -35,52 +35,67 @@ def run_migration():
         if 'correct_rate' not in columns:
             cur.execute("ALTER TABLE question_item ADD COLUMN correct_rate REAL;")
             print("  - Added 'correct_rate' column to question_item")
+        if 'review_status' not in columns:
+            cur.execute("ALTER TABLE question_item ADD COLUMN review_status TEXT DEFAULT 'AUTO_ANALYSIS_COMPLETED';")
+            print("  - Added 'review_status' column to question_item")
+        if 'reviewer_id' not in columns:
+            cur.execute("ALTER TABLE question_item ADD COLUMN reviewer_id TEXT DEFAULT NULL;")
+            print("  - Added 'reviewer_id' column to question_item")
+        if 'review_history_json' not in columns:
+            cur.execute("ALTER TABLE question_item ADD COLUMN review_history_json TEXT DEFAULT '[]';")
+            print("  - Added 'review_history_json' column to question_item")
 
         # 2. Refactor axis_analysis table to 8 flat columns using Table Recreation Pattern
-        cur.execute("""
-        CREATE TABLE IF NOT EXISTS axis_analysis_new (
-            item_id TEXT PRIMARY KEY REFERENCES question_item(item_id) ON DELETE CASCADE,
-            axis1_curriculum TEXT,
-            axis2_raw_parsing TEXT,
-            axis3_symbolic_modeling TEXT,
-            axis4_contextual_tree TEXT,
-            axis5_traps_verification TEXT,
-            axis6_genealogy TEXT,
-            axis7_mutation TEXT,
-            axis8_knowledge_graph TEXT,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        """)
-
-        # Migrate legacy rows into new 8 flat columns
-        cur.execute("SELECT item_id, kice_objective, condition_parsing, practical_heuristics, distractor_patterns, macro_lineage FROM axis_analysis;")
-        legacy_rows = cur.fetchall()
-        print(f"  - Migrating {len(legacy_rows)} rows from legacy axis_analysis...")
-
-        for row in legacy_rows:
-            item_id, kice_obj, cond_parse, prac_heur, dist_patt, macro_lin = row
-            
-            # Map legacy JSON blobs to 8 flat columns
+        cur.execute("PRAGMA table_info(axis_analysis);")
+        axis_columns = [row[1] for row in cur.fetchall()]
+        
+        if 'kice_objective' in axis_columns:
             cur.execute("""
-            INSERT OR REPLACE INTO axis_analysis_new (
-                item_id, axis1_curriculum, axis2_raw_parsing, axis3_symbolic_modeling,
-                axis4_contextual_tree, axis5_traps_verification, axis6_genealogy,
-                axis7_mutation, axis8_knowledge_graph
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
-            """, (
-                item_id,
-                kice_obj,    # axis1_curriculum
-                cond_parse,  # axis2_raw_parsing
-                prac_heur,   # axis3_symbolic_modeling
-                None,        # axis4_contextual_tree
-                dist_patt,   # axis5_traps_verification
-                macro_lin,   # axis6_genealogy
-                None,        # axis7_mutation
-                None         # axis8_knowledge_graph
-            ))
+            CREATE TABLE IF NOT EXISTS axis_analysis_new (
+                item_id TEXT PRIMARY KEY REFERENCES question_item(item_id) ON DELETE CASCADE,
+                axis1_curriculum TEXT,
+                axis2_raw_parsing TEXT,
+                axis3_symbolic_modeling TEXT,
+                axis4_contextual_tree TEXT,
+                axis5_traps_verification TEXT,
+                axis6_genealogy TEXT,
+                axis7_mutation TEXT,
+                axis8_knowledge_graph TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            """)
 
-        cur.execute("DROP TABLE axis_analysis;")
-        cur.execute("ALTER TABLE axis_analysis_new RENAME TO axis_analysis;")
+            # Migrate legacy rows into new 8 flat columns
+            cur.execute("SELECT item_id, kice_objective, condition_parsing, practical_heuristics, distractor_patterns, macro_lineage FROM axis_analysis;")
+            legacy_rows = cur.fetchall()
+            print(f"  - Migrating {len(legacy_rows)} rows from legacy axis_analysis...")
+
+            for row in legacy_rows:
+                item_id, kice_obj, cond_parse, prac_heur, dist_patt, macro_lin = row
+                
+                # Map legacy JSON blobs to 8 flat columns
+                cur.execute("""
+                INSERT OR REPLACE INTO axis_analysis_new (
+                    item_id, axis1_curriculum, axis2_raw_parsing, axis3_symbolic_modeling,
+                    axis4_contextual_tree, axis5_traps_verification, axis6_genealogy,
+                    axis7_mutation, axis8_knowledge_graph
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                """, (
+                    item_id,
+                    kice_obj,    # axis1_curriculum
+                    cond_parse,  # axis2_raw_parsing
+                    prac_heur,   # axis3_symbolic_modeling
+                    None,        # axis4_contextual_tree
+                    dist_patt,   # axis5_traps_verification
+                    macro_lin,   # axis6_genealogy
+                    None,        # axis7_mutation
+                    None         # axis8_knowledge_graph
+                ))
+
+            cur.execute("DROP TABLE axis_analysis;")
+            cur.execute("ALTER TABLE axis_analysis_new RENAME TO axis_analysis;")
+        else:
+            print("  - axis_analysis is already migrated to 8 flat columns.")
 
         # Create Indexes
         cur.execute("CREATE INDEX IF NOT EXISTS idx_question_item_exam ON question_item(exam_id);")
