@@ -4,9 +4,9 @@
   "lineage_status": "PROVISIONAL",
   "quality_plane_contract": "IMPLEMENTED",
   "independent_execution_proof": "PARTIAL",
-  "teacher_governance_loop": "IMPLEMENTED_LOCAL_VERIFIED",
-  "claim_provenance": "IMPLEMENTED_LOCAL_VERIFIED",
-  "ci_status": "WORKFLOW_COMMITTED_AWAITING_REMOTE_RUN",
+  "teacher_governance_loop": "ACTIVE",
+  "claim_provenance": "ACTIVE",
+  "ci_status": "GOVERNANCE_CI_GREEN",
   "overall_status": "PROOF_PHASE_ACTIVE",
   "version": "v2.8.1",
   "_semantics": {

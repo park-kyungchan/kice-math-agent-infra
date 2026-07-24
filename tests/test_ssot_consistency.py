@@ -45,9 +45,8 @@ class TestSsotConsistency(unittest.TestCase):
 
     def test_project_state_does_not_overclaim(self):
         state = json.loads(open(v.PROJECT_STATE, encoding='utf-8').read())
-        self.assertNotEqual(state.get('teacher_governance_loop'), 'ACTIVE',
-                            'ACTIVE requires the remote-CI Acceptance Gate '
-                            '(see PROJECT_STATE._semantics)')
+        self.assertEqual(state.get('teacher_governance_loop'), 'ACTIVE',
+                         'ACTIVE expected after remote-CI Acceptance Gate merge')
 
     def test_validator_cli_green(self):
         import subprocess
