@@ -1,0 +1,28 @@
+{
+  "concepts": [
+    {
+      "concept_id": "CONCEPT_DIFFERENCE_FUNCTION_BOUND",
+      "concept_name_english": "Difference Function Minimum & Common Tangent Theorem",
+      "curriculum_unit": "Calculus_I",
+      "latex_trigger_patterns": ["f(x) \\ge g(x)", "h(x) = f(x) - g(x) \\ge 0"],
+      "academic_definition": "If f(x) >= g(x) for all x and f(x_0)=g(x_0), then x_0 is a local minimum of h(x)=f(x)-g(x), implying h'(x_0)=0 and f'(x_0)=g'(x_0).",
+      "prerequisite_concept_ids": ["CONCEPT_FUNCTION_CONTINUITY", "CONCEPT_LOCAL_EXTREMA_FERMAT"]
+    },
+    {
+      "concept_id": "CONCEPT_ABS_VALUE_DIFFERENTIABILITY",
+      "concept_name_english": "Absolute Value Function Differentiability Theorem",
+      "curriculum_unit": "Calculus_I",
+      "latex_trigger_patterns": ["|f(x) - k|", "\\text{미분가능}"],
+      "academic_definition": "|f(x)-k| is differentiable across real numbers if and only if at every root x_0 where f(x_0)=k, f'(x_0)=0.",
+      "prerequisite_concept_ids": ["CONCEPT_LEFT_RIGHT_DERIVATIVE"]
+    },
+    {
+      "concept_id": "CONCEPT_CUBIC_RATIO_2_1",
+      "concept_name_english": "Cubic Polynomial Extremum-Tangent 2:1 Ratio Theorem",
+      "curriculum_unit": "Calculus_I",
+      "latex_trigger_patterns": ["f(x) - k = a(x - \\alpha)^2 (x - \\beta)"],
+      "academic_definition": "For any cubic polynomial, the distance from local extremum tangent point x_1 to the local extremum x_ext and intersection point x_2 satisfies |x_ext - x_1| : |x_2 - x_ext| = 2 : 1.",
+      "prerequisite_concept_ids": ["CONCEPT_CUBIC_INFLECTION_SYMMETRY"]
+    }
+  ]
+}
