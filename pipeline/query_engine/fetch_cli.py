@@ -24,6 +24,9 @@ def main():
     parser.add_argument("--exam", type=str, help="Exam ID or pattern (e.g. 202606)")
     parser.add_argument("--number", type=int, help="Item number (e.g. 15)")
     parser.add_argument("--axes", type=str, help="Comma-separated list of axes (e.g. Axis_1,Axis_3)")
+    parser.add_argument("--layer", type=str, help="Layer name (data_infrastructure, item_reasoning, corpus_lineage)")
+    parser.add_argument("--lineage", action="store_true", help="Display full precedent genealogy chain for a given item")
+    parser.add_argument("--unverified", action="store_true", help="Display items requiring HITL instructor review")
     parser.add_argument("--summary", action="store_true", help="Output short summary instead of full JSON")
     parser.add_argument("--html", action="store_true", help="Generate 100% complete HTML report artifact")
     parser.add_argument("--eval", action="store_true", help="Run 4-Tier Automated Eval Harness on HTML report")
@@ -33,8 +36,32 @@ def main():
 
     selected_axes = args.axes.split(',') if args.axes else None
 
+    if args.unverified:
+        unverified_items = fetcher.get_unverified_questions()
+        if args.summary:
+            summary_list = [
+                {
+                    "item_id": item.get("item_id"),
+                    "exam_id": item.get("exam_id"),
+                    "track": item.get("track"),
+                    "item_number": item.get("item_number"),
+                    "score": item.get("score"),
+                    "axes_present": list(item.get("axes", {}).keys())
+                }
+                for item in unverified_items
+            ]
+            print(json.dumps(summary_list, ensure_ascii=False, indent=2))
+        else:
+            print(json.dumps(unverified_items, ensure_ascii=False, indent=2))
+        return
+
     if args.item:
-        item = fetcher.get_question(args.item, axes=selected_axes)
+        if args.lineage:
+            lineage_data = fetcher.get_question_lineage(args.item)
+            print(json.dumps(lineage_data, ensure_ascii=False, indent=2))
+            return
+
+        item = fetcher.get_question(args.item, layer=args.layer, axes=selected_axes)
 
         if args.eval:
             from pipeline.report_generator.eval_html import evaluate_item_html_report
@@ -78,11 +105,18 @@ def main():
             )
             rows = cur.fetchall()
             item_ids = [r[0] for r in rows]
-            items = fetcher.get_questions_batch(item_ids, axes=selected_axes)
+
+            if args.lineage:
+                lineage_results = [fetcher.get_question_lineage(i_id) for i_id in item_ids]
+                print(json.dumps(lineage_results, ensure_ascii=False, indent=2))
+                return
+
+            items = fetcher.get_questions_batch(item_ids, layer=args.layer, axes=selected_axes)
             print(json.dumps(items, ensure_ascii=False, indent=2))
             return
 
     parser.print_help()
+
 
 if __name__ == "__main__":
     main()

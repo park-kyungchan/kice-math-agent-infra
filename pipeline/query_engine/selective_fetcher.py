@@ -3,6 +3,47 @@ import sqlite3
 import json
 from typing import Dict, List, Any, Optional
 
+LAYER_MAPPING = {
+    'data_infrastructure': ['Axis_1', 'Axis_2'],
+    'item_reasoning': ['Axis_3', 'Axis_4', 'Axis_5'],
+    'corpus_lineage': ['Axis_6', 'Axis_7', 'Axis_8'],
+    'layer_1': ['Axis_1', 'Axis_2'],
+    'layer_2': ['Axis_3', 'Axis_4', 'Axis_5'],
+    'layer_3': ['Axis_6', 'Axis_7', 'Axis_8'],
+    '1': ['Axis_1', 'Axis_2'],
+    '2': ['Axis_3', 'Axis_4', 'Axis_5'],
+    '3': ['Axis_6', 'Axis_7', 'Axis_8'],
+}
+
+def _is_item_unverified(item: Dict[str, Any]) -> bool:
+    axes = item.get('axes', {})
+    if not isinstance(axes, dict):
+        return False
+
+    for ax_name in ('Axis_3', 'Axis_5'):
+        ax_data = axes.get(ax_name)
+        if isinstance(ax_data, str):
+            try:
+                ax_data = json.loads(ax_data)
+            except Exception:
+                ax_data = None
+        if not isinstance(ax_data, dict):
+            continue
+
+        req = ax_data.get('review_required')
+        if req is True or (isinstance(req, str) and req.lower() == 'true') or req == 1:
+            return True
+
+        conf = ax_data.get('confidence_score')
+        if conf is not None:
+            try:
+                if float(conf) < 0.85:
+                    return True
+            except (ValueError, TypeError):
+                pass
+
+    return False
+
 class QuestionFetcher:
     def __init__(self, db_path: Optional[str] = None, 
                  routing_index_path: Optional[str] = None,
@@ -77,9 +118,12 @@ class QuestionFetcher:
 
         return data
 
-    def get_questions_batch(self, item_ids: List[str], axes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    def get_questions_batch(self, item_ids: List[str], layer: Optional[str] = None, axes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         if not item_ids:
             return []
+
+        if axes is None and layer is not None:
+            axes = LAYER_MAPPING.get(layer.lower())
 
         # Deduplicate preserving order
         unique_ids = list(dict.fromkeys(item_ids))
@@ -125,27 +169,100 @@ class QuestionFetcher:
                     
         return results
 
-    def get_question(self, item_id: str, axes: Optional[List[str]] = None) -> Dict[str, Any]:
-        res = self.get_questions_batch([item_id], axes=axes)
+    def get_question(self, item_id: str, layer: Optional[str] = None, axes: Optional[List[str]] = None) -> Dict[str, Any]:
+        res = self.get_questions_batch([item_id], layer=layer, axes=axes)
         if res:
             return res[0]
         return {'item_id': item_id, 'error': f'Item {item_id} not found', 'axes': {}}
 
-    def get_by_routing_key(self, routing_key: str, axes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    def get_question_lineage(self, item_id: str, visited: Optional[set] = None) -> Dict[str, Any]:
+        if visited is None:
+            visited = set()
+
+        if item_id in visited:
+            return {'item_id': item_id, 'cyclic_reference': True}
+        visited.add(item_id)
+
+        item_data = self.get_question(item_id)
+        if 'error' in item_data:
+            return {'item_id': item_id, 'error': item_data['error']}
+
+        axis6 = item_data.get('axes', {}).get('Axis_6', {})
+        if isinstance(axis6, str):
+            try:
+                axis6 = json.loads(axis6)
+            except Exception:
+                axis6 = {}
+
+        precedent_ids = []
+        if isinstance(axis6, dict):
+            p_ids = axis6.get('precedent_item_ids')
+            if isinstance(p_ids, list):
+                for p in p_ids:
+                    if isinstance(p, str):
+                        precedent_ids.append(p)
+                    elif isinstance(p, dict) and 'precedent_item_id' in p:
+                        precedent_ids.append(str(p['precedent_item_id']))
+            elif isinstance(p_ids, str):
+                precedent_ids.append(p_ids)
+
+            h_precedents = axis6.get('historical_precedents')
+            if isinstance(h_precedents, list):
+                for hp in h_precedents:
+                    if isinstance(hp, str):
+                        precedent_ids.append(hp)
+                    elif isinstance(hp, dict):
+                        pid = hp.get('precedent_item_id') or hp.get('item_id')
+                        if pid:
+                            precedent_ids.append(str(pid))
+
+            direct_pid = axis6.get('precedent_item_id')
+            if isinstance(direct_pid, str):
+                precedent_ids.append(direct_pid)
+
+        unique_precedents = []
+        for pid in precedent_ids:
+            if pid and pid not in unique_precedents and pid != item_id:
+                unique_precedents.append(pid)
+
+        precedents_lineage = []
+        for pid in unique_precedents:
+            if pid not in visited:
+                sub_tree = self.get_question_lineage(pid, visited=visited)
+                if sub_tree:
+                    precedents_lineage.append(sub_tree)
+
+        return {
+            'item_id': item_id,
+            'item': item_data,
+            'precedents': precedents_lineage
+        }
+
+    def get_unverified_questions(self) -> List[Dict[str, Any]]:
+        with self.get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT item_id FROM question_item")
+            rows = cur.fetchall()
+            all_item_ids = [r[0] for r in rows]
+
+        all_items = self.get_questions_batch(all_item_ids)
+        return [item for item in all_items if _is_item_unverified(item)]
+
+    def get_by_routing_key(self, routing_key: str, layer: Optional[str] = None, axes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         idx = self._load_routing_index()
         info = idx.get(routing_key, {})
         sample_items = info.get('sample_items', [])
-        return self.get_questions_batch(sample_items, axes=axes)
+        return self.get_questions_batch(sample_items, layer=layer, axes=axes)
 
-    def get_by_keyword(self, keyword: str, axes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    def get_by_keyword(self, keyword: str, layer: Optional[str] = None, axes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         idx = self._load_routing_index()
         matched_items = []
         for r_key, info in idx.items():
             if keyword in info.get('keyword', '') or keyword in info.get('unit', ''):
                 matched_items.extend(info.get('sample_items', []))
-        return self.get_questions_batch(matched_items, axes=axes)
+        return self.get_questions_batch(matched_items, layer=layer, axes=axes)
 
-    def get_by_concept_id(self, concept_id: str, axes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    def get_by_concept_id(self, concept_id: str, layer: Optional[str] = None, axes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         cmap = self._load_concept_map()
         matched_concept = None
         for concept in cmap.get("concepts", []):
@@ -154,8 +271,7 @@ class QuestionFetcher:
                 break
         if not matched_concept:
             return []
-        # Return all questions matching concept patterns if tagged in routing index
-        return self.get_by_keyword(matched_concept.get("concept_name_english", ""), axes=axes)
+        return self.get_by_keyword(matched_concept.get("concept_name_english", ""), layer=layer, axes=axes)
 
     def clear_cache(self) -> None:
         self._question_cache.clear()
@@ -166,3 +282,4 @@ if __name__ == '__main__':
     fetcher = QuestionFetcher()
     res = fetcher.get_question('202411_MATH_DIF_22', axes=['Axis_1', 'Axis_2', 'Axis_3', 'Axis_4', 'Axis_5', 'Axis_6', 'Axis_7', 'Axis_8'])
     print('Refactored 8-Axis Fetcher Test:', res['item_id'], 'Score:', res['score'], 'Answer:', res.get('answer'), 'Axes Fetched:', list(res['axes'].keys()))
+

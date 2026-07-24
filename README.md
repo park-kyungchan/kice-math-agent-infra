@@ -1,6 +1,6 @@
 # CSAT Mathematics Zero-Context Agent Infra (`kice-math-agent-infra`)
 
-End-to-end infrastructure allowing zero-context AI agents to retrieve, analyze, and reason about 1,350+ CSAT/KICE Mathematics exam questions using a 6-Axis Multi-Dimensional Taxonomy Schema.
+End-to-end infrastructure allowing zero-context AI agents and **Math Instructors** to retrieve, analyze, and reason about 1,350+ CSAT/KICE Mathematics exam questions using a **3-Layer 8-Axis Multi-Dimensional Taxonomy Architecture** (v2.6.0).
 
 ---
 

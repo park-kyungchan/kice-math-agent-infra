@@ -7,7 +7,8 @@ This document is your **Loading Order 1 Entrypoint Guide**.
 
 ## 1. Quick Project Summary
 - **Target Domain**: 2027 KICE Mock & CSAT Mathematics (Common: Algebra/Calculus I, Elective: Calculus II, Geometry, Prob & Stat).
-- **Core Purpose**: End-to-end infrastructure allowing zero-context AI agents to retrieve, reason, verify, and link math questions using the **Master 8-Axis Taxonomy Schema**.
+- **Target User Personas**: Zero-Context Autonomous AI Agents & **Math Instructors / Professional Educators**.
+- **Core Purpose**: End-to-end infrastructure allowing zero-context AI agents and Math Instructors to retrieve, reason, verify, and link math questions using the **3-Layer 8-Axis Taxonomy Architecture** (v2.6.0).
 - **Dataset Scale**: **1,350 CSAT/KICE exam questions** across 45 PDF papers (2021~2026) and **1,350 high-res 300 DPI diagram PNG assets** loaded into a 4-Tier SQLite DB (`storage/parsed_dataset.db`).
 
 ---
@@ -16,13 +17,13 @@ This document is your **Loading Order 1 Entrypoint Guide**.
 
 ```mermaid
 graph TD
-    LO1[Loading Order 1: ENTRYPOINT.md & MANIFEST.json<br/>- Project Summary, Directory Map, DB Location] --> LO2[Loading Order 2: docs/Taxonomy_Spec.md<br/>- Master 8-Axis Schema & 4-Tier DB DDL]
-    LO2 --> LO3[Loading Order 3: pipeline/agents_spec/router_orchestrator_agent.md<br/>- Master Router Protocol & 100% English Agent Specs]
-    LO3 --> LO4[Loading Order 4: pipeline/query_engine/selective_fetcher.py<br/>- Python 1-line DB & Batch Fetcher Helper]
+    LO1["Loading Order 1: ENTRYPOINT.md & MANIFEST.json<br/>- Project Summary, Directory Map, DB Location"] --> LO2["Loading Order 2: docs/Taxonomy_Spec.md<br/>- 3-Layer 8-Axis Schema & 4-Tier DB DDL"]
+    LO2 --> LO3["Loading Order 3: pipeline/agents_spec/router_orchestrator_agent.md<br/>- Master Router Protocol & 100% English Agent Specs"]
+    LO3 --> LO4["Loading Order 4: pipeline/query_engine/selective_fetcher.py<br/>- Python 1-line DB & Batch Fetcher Helper"]
 ```
 
-- **Loading Order 1 (This File & MANIFEST.json)**: High-level overview & entrypoints.
-- **Loading Order 2 ([docs/Taxonomy_Spec.md](file:///c:/Users/packr/Claude/kice-math-agent-infra/docs/Taxonomy_Spec.md))**: Master 8-Axis Schema & 4-Tier DB Table DDLs.
+- **Loading Order 1 (This File & MANIFEST.json)**: High-level overview & entrypoints (v2.6.0 - 3-Layer Taxonomy & Semantic Eval Harness).
+- **Loading Order 2 ([docs/Taxonomy_Spec.md](file:///c:/Users/packr/Claude/kice-math-agent-infra/docs/Taxonomy_Spec.md))**: Master 3-Layer 8-Axis Schema & 4-Tier DB Table DDLs.
 - **Loading Order 3 ([pipeline/agents_spec/router_orchestrator_agent.md](file:///c:/Users/packr/Claude/kice-math-agent-infra/pipeline/agents_spec/router_orchestrator_agent.md))**: 100% English Master Router & 8 Axis Agent Specs.
 - **Loading Order 4 ([pipeline/query_engine/selective_fetcher.py](file:///c:/Users/packr/Claude/kice-math-agent-infra/pipeline/query_engine/selective_fetcher.py))**: High-performance batch fetcher helper (`get_questions_batch()`, latency $<10\text{ ms}$).
 
@@ -32,10 +33,10 @@ graph TD
 
 ```
 kice-math-agent-infra/
-├── ENTRYPOINT.md                       <-- [You are here] Order 1 Entrypoint Guide
-├── MANIFEST.json                       <-- Structured System Manifest (8-Axis Spec)
+├── ENTRYPOINT.md                       <-- [You are here] Order 1 Entrypoint Guide (v2.6.0)
+├── MANIFEST.json                       <-- Structured System Manifest (3-Layer 8-Axis Spec)
 ├── docs/                               <-- Master Specifications & Plans
-│   ├── Taxonomy_Spec.md                <-- Order 2: Master 8-Axis Schema & DB DDLs
+│   ├── Taxonomy_Spec.md                <-- Order 2: Master 3-Layer 8-Axis Schema & DB DDLs
 │   ├── Korean_Math_Glossary.json       <-- Korean-English Math Lexicon
 │   ├── Master_Blueprint.md             <-- System Architecture Roadmap
 │   └── Walkthrough_Report.md           <-- Phase Completion Report
@@ -55,7 +56,7 @@ kice-math-agent-infra/
 │   │   └── axis8_knowledge_graph_agent.md
 │   └── migrate_db_8axis.py             <-- DB Migration Engine
 ├── storage/                            <-- 4-Tier Database & Assets
-│   ├── parsed_dataset.db               <-- 1,350 Items SQLite DB (8 Flat Columns)
+│   ├── parsed_dataset.db               <-- 1,350 Items SQLite DB (8 Flat Columns across 3 Layers)
 │   ├── kice_math_concept_map.json      <-- Ground-Truth Math Concept Map Dataset
 │   └── assets/                         <-- 1,350 High-Res Diagram PNGs
 └── tests/                              <-- Automated Verification Test Suite

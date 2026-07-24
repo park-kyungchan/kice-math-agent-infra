@@ -2,7 +2,7 @@
 
 > **Deposit Metadata**  
 > - **Deposit Timestamp**: 2026-07-24  
-> - **Infrastructure Version**: `v2.5.0` (Deterministic Condition Parser, 4-Tier Automated Eval Harness & Clean Git Workflow)
+> - **Infrastructure Version**: `v2.6.0` (3-Layer Taxonomy Architecture & Math Instructors Persona, 4-Tier Automated Eval Harness)
 > - **Target Repository**: [kice-math-agent-infra](https://github.com/park-kyungchan/kice-math-agent-infra.git)  
 > - **Workspace Path**: `C:\Users\packr\Claude\kice-math-agent-infra`  
 > - **Compatibility**: 100% Agent-Agnostic (Claude Code, OpenAI Codex, Antigravity/AGY, Gemini, Cursor, etc.)
@@ -12,7 +12,7 @@
 ## 1. System Environment & Tooling Deposit
 
 - **OS / Shell**: Windows 11 / PowerShell
-- **Database Engine**: SQLite 3 (`storage/parsed_dataset.db` with 8 Flat Columns & persistent indexing)
+- **Database Engine**: SQLite 3 (`storage/parsed_dataset.db` with 8 Flat Columns & persistent indexing across 3 Layers)
 - **Python Runtime**: Python 3.10+ (`pipeline/query_engine/selective_fetcher.py`)
 - **Automated Test Suite**: 17 Unit Tests in `tests/` (100.0% PASS, 0.004ms Batch SLA)
 - **GitHub Synchronization**:
@@ -25,7 +25,8 @@
 ## 2. Dataset & Storage Infrastructure Deposit
 
 - **Target Domain**: 2027 CSAT/KICE Mathematics (Common: Algebra/Calculus I, Elective: Calculus II, Geometry, Prob & Stat)
-- **Primary Database**: `storage/parsed_dataset.db` (4-Tier SQLite Schema with `answer`, `correct_rate`, and 8 flat axis columns)
+- **Target User Personas**: AI Autonomous Agents & **Math Instructors / Professional Educators**
+- **Primary Database**: `storage/parsed_dataset.db` (4-Tier SQLite Schema with `answer`, `correct_rate`, and 8 flat axis columns structured across 3 functional layers)
 - **Parsed Questions Scale**: 1,350 CSAT/KICE Exam Items across 45 PDF papers (2021~2026)
 - **Diagram Assets**: 1,350 cropped 300 DPI diagram PNG assets in `storage/assets/`
 - **Concept Map Dataset**: `storage/kice_math_concept_map.json` (Ground-truth math ontology)
@@ -33,20 +34,20 @@
 
 ---
 
-## 3. Master 8-Axis Flat Routing Map & Schema Summary
+## 3. Master 3-Layer 8-Axis Flat Routing Map & Schema Summary
 
-Any AI Agent initiating a new session should refer to the following **8 Flat Axes**:
+Any AI Agent or Math Instructor initiating a session should refer to the following **3-Layer 8-Axis Taxonomy Architecture**:
 
-| Axis ID | DB Column Name | Primary Functional Domain | Core Schema / Features |
-| :--- | :--- | :--- | :--- |
-| **Axis 1** | `axis1_curriculum` | Curriculum & Multi-Unit Integration | 2022 achievement standards, primary/secondary units, cross-unit coupling matrix, prerequisite concept graph. |
-| **Axis 2** | `axis2_raw_parsing` | Literal Parsing & Normalization | KaTeX AMS-Math normalized syntax, 1:1 raw Korean condition extraction, target expression isolation. |
-| **Axis 3** | `axis3_symbolic_modeling` | Symbolic Modeling & Concept Map | `storage/kice_math_concept_map.json` matching, difference functions, embedded shortcut solving suggestions. |
-| **Axis 4** | `axis4_contextual_tree` | All-Domain Contextual Interpretation | **All 5 CSAT domains** (Sequences, Algebra, Geometry, ProbStat, Calculus) dynamic interpretation tree & Scratchpad `backtrack_log`. |
-| **Axis 5** | `axis5_traps_verification` | Distractor Matrix & Verification | 16 student error codes (`DIST_CASE_SIGN`, etc.), ①~⑤ option matrix, 4-phase AI verification protocol (`ASSERT`, limit check, sanity). |
-| **Axis 6** | `axis6_genealogy` | Core Idea Genealogy & Deep-Dive | 10-year mathematical gene codes (`GENE_ABS_DIFF_SMOOTH`), precedent linking via **`precedent_item_id` foreign keys** for instant deep-dive fetching. |
-| **Axis 7** | `axis7_mutation` | Condition Representation Mutation | 10-year evolutionary chain of textual phrasing and symbolic representation shifts. |
-| **Axis 8** | `axis8_knowledge_graph` | Knowledge Graph Topology | 1,350-item graph node/edge topology, degree centrality, and cluster IDs. |
+| Architectural Layer | Axis ID | DB Column Name | Primary Functional Domain | Core Schema / Features & Key Fields |
+| :--- | :--- | :--- | :--- | :--- |
+| **Layer 1: Pre-processing & Data Infrastructure** | **Axis 1** | `axis1_curriculum` | Curriculum & Construct | 2022 achievement standards, primary/secondary units, cross-unit coupling matrix, prerequisite concept graph. |
+| | **Axis 2** | `axis2_raw_parsing` | Literal Parsing & Normalization | KaTeX AMS-Math normalized syntax, 1:1 raw Korean condition extraction, target expression isolation. |
+| **Layer 2: Item Mathematical Reasoning** | **Axis 3** | `axis3_symbolic_modeling` | Symbolic Modeling & Concept Map | Concept map matching, standard vs. shortcut solutions with explicit `shortcut_prerequisites` & `shortcut_traps`. |
+| | **Axis 4** | `axis4_contextual_tree` | All-Domain Contextual Interpretation | All 5 CSAT domains dynamic interpretation tree & Scratchpad `backtrack_log`. |
+| | **Axis 5** | `axis5_traps_verification` | Distractor Matrix & Verification | 16 student error codes, empirical vs. simulated tagging (`is_simulated_hypothesis`), QA flags (`review_required`), and `confidence_score`. |
+| **Layer 3: Corpus Lineage & Knowledge Index** | **Axis 6** | `axis6_genealogy` | Core Idea Genealogy & Deep-Dive | 10-year mathematical gene codes (`GENE_ABS_DIFF_SMOOTH`), precedent linking via **`precedent_item_id` foreign keys**. |
+| | **Axis 7** | `axis7_mutation` | Condition Representation Mutation | 10-year evolutionary chain of textual phrasing and symbolic representation shifts. |
+| | **Axis 8** | `axis8_knowledge_graph` | Knowledge Graph Topology | 1,350-item graph node/edge topology, degree centrality, and cluster IDs. |
 
 ---
 
