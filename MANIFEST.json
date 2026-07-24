@@ -1,6 +1,7 @@
 {
   "project_name": "CSAT Mathematics Zero-Context Agent Infra",
-  "version": "2.8.0",
+  "version": "v2.8.1",
+  "project_state_ref": "PROJECT_STATE.json",
   "target_domain": "2027 KICE Mock & CSAT Mathematics (Common + Calculus, Geometry, Prob)",
   "target_personas": ["Zero-Context Autonomous AI Agents", "Math Instructors & Curriculum Developers"],
   "architecture": "3-Layer 8-Axis Taxonomy Architecture & Semantic Eval Harness",
@@ -8,10 +9,9 @@
     "total_items_parsed": 1350,
     "total_pdf_papers": 45,
     "total_diagram_png_assets": 1350,
-    "db_location": "storage/parsed_dataset.db",
-    "eval_gate_score": "100.0% PASS (3-Layer Taxonomy & Semantic Eval Harness v2.8.0)",
-    "eval_status": "PROVISIONAL Matrix Active (v2.8.0)"
+    "db_location": "storage/parsed_dataset.db"
   },
+  "_note": "Evaluation/proof status is declared ONLY in PROJECT_STATE.json (SSoT). This manifest never duplicates dynamic state.",
   "context_loading_entrypoints": {
     "order_1_manifest": "ENTRYPOINT.md",
     "order_2_taxonomy_spec": "docs/Taxonomy_Spec.md",

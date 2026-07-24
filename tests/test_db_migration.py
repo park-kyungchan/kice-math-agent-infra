@@ -30,6 +30,23 @@ class TestDBMigration(unittest.TestCase):
         columns = [row[1] for row in cur.fetchall()]
         self.assertIn("answer", columns, "Column 'answer' missing in question_item")
         self.assertIn("correct_rate", columns, "Column 'correct_rate' missing in question_item")
+        # v2.8.1 governance columns
+        for col in ("review_status", "reviewer_id", "review_history_json", "review_version"):
+            self.assertIn(col, columns, f"Column '{col}' missing in question_item")
+
+    def test_review_status_check_constraint_present(self):
+        cur = self.conn.cursor()
+        cur.execute("SELECT sql FROM sqlite_master WHERE name='question_item';")
+        ddl = (cur.fetchone()[0] or '').replace('\n', ' ')
+        self.assertIn('review_status IN', ddl,
+                      'question_item must enforce the 8-state CHECK constraint')
+
+    def test_governance_tables_exist(self):
+        cur = self.conn.cursor()
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = {r[0] for r in cur.fetchall()}
+        self.assertIn('teacher_review_event', tables)
+        self.assertIn('claim_provenance', tables)
 
     def test_axis_analysis_8flat_columns(self):
         cur = self.conn.cursor()

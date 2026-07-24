@@ -1,6 +1,8 @@
 # SSoT (Single Source of Truth) Governance Map
 
-This document establishes the authoritative sources of truth for all domains within the `kice-math-agent-infra` system (v2.8.0). Any conflict between documents must be resolved by referring to the designated SSoT for that domain.
+This document establishes the authoritative sources of truth for all domains within the `kice-math-agent-infra` system (v2.8.1). Any conflict between documents must be resolved by referring to the designated SSoT for that domain.
+
+> **Drift gate:** `scripts/validate_ssot_consistency.py` mechanically checks (1) Taxonomy_Spec DDL == live DB schema, (2) MANIFEST.json references and never duplicates PROJECT_STATE.json, (3) version-string coherence across root docs, (4) the documented transition matrix == `review_state.ALLOWED_TRANSITIONS`. CI runs it on every PR.
 
 ## 1. Taxonomy & DDL SSoT
 **Document:** [`docs/Taxonomy_Spec.md`](Taxonomy_Spec.md)
@@ -26,3 +28,13 @@ This document establishes the authoritative sources of truth for all domains wit
 **Document:** [`storage/parsed_dataset.db`](../storage/parsed_dataset.db)
 * **Domain:** The actual indexed repository of all processed 2021-2026 KICE math items, metadata, and linkage codes.
 * **Governance:** The SQLite database is the ultimate authority on item metadata, bypassing any outdated or disconnected text summaries.
+
+## 6. Review Workflow & Audit SSoT
+**Authority:** `question_item.review_status` (current state snapshot) + [`teacher_review_event`](Taxonomy_Spec.md) (append-only audit log), mutated ONLY through `pipeline/query_engine/review_state.py`.
+* **Domain:** Teacher review workflow states, transitions, and their full audit history.
+* **Governance:** No code path may UPDATE `review_status` directly; every change goes through the transition function (matrix-validated, event-recorded, optimistically locked). `review_history_json` is deprecated and read-only.
+
+## 7. Claim Provenance SSoT
+**Authority:** [`claim_provenance`](Taxonomy_Spec.md) table, served by `pipeline/query_engine/claim_provenance.py`.
+* **Domain:** Per-claim provenance (claim type, sources, derivation actor, confidence, counter-evidence, human verification).
+* **Governance:** Provenance exists only if persisted; readers must never synthesize provenance or axis payloads. Teacher approval/rejection links claims to the deciding `teacher_review_event`.

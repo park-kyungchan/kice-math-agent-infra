@@ -25,7 +25,7 @@ graph TD
 - **Loading Order 1 (This File & MANIFEST.json)**: High-level overview & entrypoints (v2.8.0).
 - **Loading Order 2 ([docs/SSOT_MAP.md](docs/SSOT_MAP.md) & [docs/Taxonomy_Spec.md](docs/Taxonomy_Spec.md))**: SSoT Governance rules and Master 3-Layer 8-Axis Schema.
 - **Loading Order 3 ([pipeline/agents_spec/router_orchestrator_agent.md](pipeline/agents_spec/router_orchestrator_agent.md))**: 100% English Master Router & 8 Axis Agent Specs.
-- **Loading Order 4 ([pipeline/query_engine/selective_fetcher.py](pipeline/query_engine/selective_fetcher.py))**: High-performance batch fetcher helper (`get_questions_batch()`, latency $<10\text{ ms}$).
+- **Loading Order 4 ([pipeline/query_engine/selective_fetcher.py](pipeline/query_engine/selective_fetcher.py))**: High-performance batch fetcher helper (`get_questions_batch()`; SLA table: `docs/STAKEHOLDER_INTENT.md` §2.6).
 
 ---
 
@@ -67,7 +67,7 @@ kice-math-agent-infra/
 from pipeline.query_engine.selective_fetcher import QuestionFetcher
 
 fetcher = QuestionFetcher()
-# Fetch question item with selected axes in single batch query (<10ms)
+# Fetch question item with selected axes in single batch query (cold DB p95 < 10ms)
 data = fetcher.get_question('202411_MATH_DIF_22', axes=['Axis_1', 'Axis_3', 'Axis_4'])
 print(data['item_id'], data['answer'], data['axes'])
 ```

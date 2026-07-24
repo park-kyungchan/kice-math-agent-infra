@@ -7,14 +7,21 @@ from datetime import datetime
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 STORAGE_DIR = os.path.join(BASE_DIR, 'storage')
 DB_PATH = os.path.join(STORAGE_DIR, 'parsed_dataset.db')
-BACKUP_PATH = os.path.join(STORAGE_DIR, 'parsed_dataset_backup.db')
+BACKUP_DIR = os.path.join(STORAGE_DIR, 'backups')
 
 def create_physical_backup():
-    if os.path.exists(DB_PATH):
-        shutil.copy2(DB_PATH, BACKUP_PATH)
-        print(f"[Phase 0] Backup created: {BACKUP_PATH}")
-    else:
+    """Timestamped, content-addressed backup — never overwrites a previous backup."""
+    if not os.path.exists(DB_PATH):
         raise FileNotFoundError(f"Database not found at {DB_PATH}")
+    import hashlib
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    with open(DB_PATH, 'rb') as f:
+        digest = hashlib.sha256(f.read()).hexdigest()[:8]
+    ts = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+    backup_path = os.path.join(BACKUP_DIR, f'parsed_dataset_pre_8axis_{ts}_{digest}.db')
+    shutil.copy2(DB_PATH, backup_path)
+    print(f"[Phase 0] Backup created: {backup_path}")
+    return backup_path
 
 def run_migration():
     print(f"[Phase 1] Starting SQLite DB Migration for 8-Axis Schema...")

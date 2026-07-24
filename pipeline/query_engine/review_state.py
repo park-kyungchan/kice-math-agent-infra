@@ -1,0 +1,343 @@
+# -*- coding: utf-8 -*-
+"""
+Teacher Review State Machine (v2.8.1)
+=====================================
+Single authority for review workflow state transitions.
+
+Design invariants (see docs/Taxonomy_Spec.md §Review State Machine):
+- ALLOWED_TRANSITIONS is the only legal transition surface. An illegal
+  transition raises TransitionError and performs ZERO database writes.
+- Every successful transition atomically:
+    1. validates the current persisted state,
+    2. appends one immutable row to `teacher_review_event` (append-only audit),
+    3. updates the `question_item` snapshot (review_status, reviewer_id,
+       review_version) with optimistic locking (review_version).
+- `teacher_review_event` is the audit SSoT. `question_item.review_history_json`
+  is DEPRECATED (retained for backward compatibility, no longer written).
+- LLM/agent-agnostic: actors are data (`actor_type` in {'TEACHER','SYSTEM','AGENT'},
+  free-form `actor_id`), never a vendor assumption.
+"""
+import json
+import sqlite3
+import uuid
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
+# --- States ----------------------------------------------------------------
+
+REVIEW_STATES = (
+    "AUTO_ANALYSIS_COMPLETED",
+    "REVIEW_REQUIRED",
+    "TEACHER_ASSIGNED",
+    "TEACHER_APPROVED",
+    "REVISION_REQUESTED",
+    "TEACHER_REVISED",
+    "REJECTED",
+    "VERIFIED",
+)
+
+# Persisted-workflow-state transition matrix. Quality Plane results NEVER
+# mutate state directly; they enter only through sync_review_states() /
+# revalidate_item(), which perform explicit transitions recorded as events.
+ALLOWED_TRANSITIONS: Dict[str, set] = {
+    "AUTO_ANALYSIS_COMPLETED": {"REVIEW_REQUIRED"},
+    "REVIEW_REQUIRED": {"TEACHER_ASSIGNED", "REJECTED"},
+    "TEACHER_ASSIGNED": {"TEACHER_APPROVED", "REVISION_REQUESTED", "REJECTED"},
+    "REVISION_REQUESTED": {"TEACHER_REVISED"},
+    "TEACHER_REVISED": {"REVIEW_REQUIRED"},
+    "TEACHER_APPROVED": {"VERIFIED", "REVIEW_REQUIRED"},
+    "REJECTED": set(),
+    "VERIFIED": {"REVIEW_REQUIRED"},
+}
+
+# Queue membership is defined ONLY by persisted state.
+QUEUE_STATES = ("REVIEW_REQUIRED", "TEACHER_ASSIGNED", "REVISION_REQUESTED")
+
+ACTOR_TYPES = ("TEACHER", "SYSTEM", "AGENT")
+
+
+class ReviewStateError(Exception):
+    """Base class for review workflow errors."""
+
+
+class TransitionError(ReviewStateError):
+    """Raised when a transition violates ALLOWED_TRANSITIONS. No DB write occurs."""
+
+
+class ConcurrencyError(ReviewStateError):
+    """Raised when optimistic locking detects a concurrent modification."""
+
+
+class ItemNotFoundError(ReviewStateError):
+    """Raised when the target item does not exist."""
+
+
+# --- Schema ----------------------------------------------------------------
+
+EVENT_TABLE_DDL = """
+CREATE TABLE IF NOT EXISTS teacher_review_event (
+    event_id TEXT PRIMARY KEY,
+    item_id TEXT NOT NULL REFERENCES question_item(item_id),
+    from_status TEXT NOT NULL,
+    to_status TEXT NOT NULL,
+    actor_type TEXT NOT NULL CHECK (actor_type IN ('TEACHER','SYSTEM','AGENT')),
+    actor_id TEXT NOT NULL,
+    action TEXT NOT NULL,
+    reason_code TEXT,
+    notes TEXT,
+    evidence_json TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(evidence_json)),
+    item_version INTEGER NOT NULL,
+    created_at TEXT NOT NULL
+);
+"""
+
+EVENT_INDEX_DDL = (
+    "CREATE INDEX IF NOT EXISTS idx_review_event_item ON teacher_review_event(item_id, created_at);"
+)
+
+
+def ensure_event_schema(conn: sqlite3.Connection) -> None:
+    conn.execute(EVENT_TABLE_DDL)
+    conn.execute(EVENT_INDEX_DDL)
+
+
+def _utcnow() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+
+def _has_column(conn: sqlite3.Connection, table: str, column: str) -> bool:
+    cur = conn.execute(f"PRAGMA table_info({table})")
+    return column in [r[1] for r in cur.fetchall()]
+
+
+# --- Core transition -------------------------------------------------------
+
+def transition(
+    conn: sqlite3.Connection,
+    item_id: str,
+    to_status: str,
+    actor_id: str,
+    actor_type: str = "TEACHER",
+    action: Optional[str] = None,
+    reason_code: Optional[str] = None,
+    notes: Optional[str] = None,
+    evidence: Optional[List[Any]] = None,
+    expected_version: Optional[int] = None,
+) -> Dict[str, Any]:
+    """Perform one validated state transition.
+
+    Atomic: event insert + snapshot update happen in a single IMMEDIATE
+    transaction. On any validation failure nothing is written.
+    Returns the recorded event as a dict.
+    """
+    if to_status not in REVIEW_STATES:
+        raise TransitionError(f"Unknown target state: {to_status!r}")
+    if actor_type not in ACTOR_TYPES:
+        raise TransitionError(f"Unknown actor_type: {actor_type!r}")
+    if not actor_id or not str(actor_id).strip():
+        raise TransitionError("actor_id must be a non-empty string")
+    if not _has_column(conn, "question_item", "review_version"):
+        raise ReviewStateError(
+            "Schema not migrated: question_item.review_version missing. "
+            "Run pipeline/migrate_db_v2_8_1.py first."
+        )
+    ensure_event_schema(conn)
+
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        row = conn.execute(
+            "SELECT review_status, review_version FROM question_item WHERE item_id = ?",
+            (item_id,),
+        ).fetchone()
+        if row is None:
+            raise ItemNotFoundError(f"Item {item_id} not found")
+        from_status, current_version = row[0], row[1]
+
+        if from_status not in ALLOWED_TRANSITIONS:
+            raise TransitionError(f"Item {item_id} is in unknown state {from_status!r}")
+        if to_status not in ALLOWED_TRANSITIONS[from_status]:
+            raise TransitionError(
+                f"Illegal transition {from_status} -> {to_status} for item {item_id}. "
+                f"Allowed: {sorted(ALLOWED_TRANSITIONS[from_status]) or 'none (terminal state)'}"
+            )
+        if expected_version is not None and expected_version != current_version:
+            raise ConcurrencyError(
+                f"Item {item_id} version mismatch: expected {expected_version}, "
+                f"actual {current_version}"
+            )
+
+        event = {
+            "event_id": str(uuid.uuid4()),
+            "item_id": item_id,
+            "from_status": from_status,
+            "to_status": to_status,
+            "actor_type": actor_type,
+            "actor_id": actor_id,
+            "action": action or to_status,
+            "reason_code": reason_code,
+            "notes": notes,
+            "evidence_json": json.dumps(evidence or [], ensure_ascii=False),
+            "item_version": current_version + 1,
+            "created_at": _utcnow(),
+        }
+        conn.execute(
+            """INSERT INTO teacher_review_event
+               (event_id, item_id, from_status, to_status, actor_type, actor_id,
+                action, reason_code, notes, evidence_json, item_version, created_at)
+               VALUES (:event_id, :item_id, :from_status, :to_status, :actor_type,
+                       :actor_id, :action, :reason_code, :notes, :evidence_json,
+                       :item_version, :created_at)""",
+            event,
+        )
+        reviewer_id = actor_id if actor_type == "TEACHER" else None
+        cur = conn.execute(
+            """UPDATE question_item
+               SET review_status = ?,
+                   reviewer_id = COALESCE(?, reviewer_id),
+                   review_version = review_version + 1
+               WHERE item_id = ? AND review_version = ?""",
+            (to_status, reviewer_id, item_id, current_version),
+        )
+        if cur.rowcount != 1:
+            raise ConcurrencyError(
+                f"Concurrent modification detected for item {item_id}"
+            )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+
+    # Post-commit side effect: teacher approval / rejection marks the item's
+    # claim-level provenance (separate transaction; idempotent).
+    if to_status in ("TEACHER_APPROVED", "REJECTED"):
+        try:
+            from pipeline.query_engine.claim_provenance import set_human_review
+            set_human_review(
+                conn,
+                item_id,
+                status="HUMAN_VERIFIED" if to_status == "TEACHER_APPROVED" else "HUMAN_REJECTED",
+                event_id=event["event_id"],
+            )
+        except ImportError:
+            pass
+    return event
+
+
+# --- Queries ---------------------------------------------------------------
+
+def get_review_queue(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
+    """Queue = persisted workflow states only (P0-2 fix)."""
+    placeholders = ",".join("?" for _ in QUEUE_STATES)
+    rows = conn.execute(
+        f"""SELECT item_id, review_status, reviewer_id, review_version
+            FROM question_item
+            WHERE review_status IN ({placeholders})
+            ORDER BY item_id""",
+        QUEUE_STATES,
+    ).fetchall()
+    return [
+        {
+            "item_id": r[0],
+            "review_status": r[1],
+            "reviewer_id": r[2],
+            "review_version": r[3],
+        }
+        for r in rows
+    ]
+
+
+def get_item_events(conn: sqlite3.Connection, item_id: str) -> List[Dict[str, Any]]:
+    ensure_event_schema(conn)
+    rows = conn.execute(
+        """SELECT event_id, item_id, from_status, to_status, actor_type, actor_id,
+                  action, reason_code, notes, evidence_json, item_version, created_at
+           FROM teacher_review_event WHERE item_id = ?
+           ORDER BY item_version ASC, created_at ASC""",
+        (item_id,),
+    ).fetchall()
+    cols = (
+        "event_id", "item_id", "from_status", "to_status", "actor_type", "actor_id",
+        "action", "reason_code", "notes", "evidence_json", "item_version", "created_at",
+    )
+    return [dict(zip(cols, r)) for r in rows]
+
+
+def get_status_counts(conn: sqlite3.Connection) -> Dict[str, int]:
+    rows = conn.execute(
+        "SELECT review_status, COUNT(*) FROM question_item GROUP BY review_status"
+    ).fetchall()
+    return {r[0]: r[1] for r in rows}
+
+
+# --- Quality-Plane -> state synchronization (computed state enters here) ---
+
+def sync_review_states(fetcher, actor_id: str = "quality-plane-sync") -> Dict[str, Any]:
+    """Persist Quality-Plane/heuristic 'unverified' findings as explicit
+    AUTO_ANALYSIS_COMPLETED -> REVIEW_REQUIRED transitions, and requeue
+    TEACHER_REVISED items for re-review. This is the ONLY bridge between
+    computed semantic state and persisted workflow state.
+    """
+    from pipeline.query_engine.selective_fetcher import _is_item_unverified
+
+    moved: List[str] = []
+    requeued: List[str] = []
+    with fetcher.get_connection() as conn:
+        ensure_event_schema(conn)
+        auto_ids = [
+            r[0]
+            for r in conn.execute(
+                "SELECT item_id FROM question_item WHERE review_status = 'AUTO_ANALYSIS_COMPLETED'"
+            ).fetchall()
+        ]
+        revised_ids = [
+            r[0]
+            for r in conn.execute(
+                "SELECT item_id FROM question_item WHERE review_status = 'TEACHER_REVISED'"
+            ).fetchall()
+        ]
+
+    for item_id in auto_ids:
+        item = fetcher.get_question(item_id)
+        if "error" in item:
+            continue
+        if _is_item_unverified(item):
+            with fetcher.get_connection() as conn:
+                transition(
+                    conn, item_id, "REVIEW_REQUIRED",
+                    actor_id=actor_id, actor_type="SYSTEM", action="AUTO_SYNC",
+                    reason_code="QUALITY_PLANE_UNRESOLVED",
+                )
+            moved.append(item_id)
+
+    for item_id in revised_ids:
+        with fetcher.get_connection() as conn:
+            transition(
+                conn, item_id, "REVIEW_REQUIRED",
+                actor_id=actor_id, actor_type="SYSTEM", action="AUTO_REQUEUE",
+                reason_code="REVISED_AWAITING_REREVIEW",
+            )
+        requeued.append(item_id)
+
+    return {
+        "scanned": len(auto_ids) + len(revised_ids),
+        "moved_to_review_required": moved,
+        "requeued_after_revision": requeued,
+    }
+
+
+def revalidate_item(fetcher, item_id: str, actor_id: str = "independent-revalidator") -> Dict[str, Any]:
+    """TEACHER_APPROVED -> VERIFIED only if an independent Quality-Plane pass
+    is green; otherwise TEACHER_APPROVED -> REVIEW_REQUIRED. Exit gate of the
+    review loop (P0-2/P0-3 fix)."""
+    fetcher.clear_cache()
+    qp = fetcher.evaluate_quality_plane(item_id)
+    green = (not qp.is_vetoed) and qp.status == "VERIFIED"
+    to_status = "VERIFIED" if green else "REVIEW_REQUIRED"
+    with fetcher.get_connection() as conn:
+        event = transition(
+            conn, item_id, to_status,
+            actor_id=actor_id, actor_type="SYSTEM", action="REVALIDATE",
+            reason_code="QUALITY_PLANE_GREEN" if green else "QUALITY_PLANE_UNRESOLVED",
+            evidence=[{"quality_plane_status": qp.status, "is_vetoed": qp.is_vetoed}],
+        )
+    return {"item_id": item_id, "revalidation_green": green, "event": event}

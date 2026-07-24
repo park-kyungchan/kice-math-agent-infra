@@ -1,3 +1,20 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# SQLite backups & journals (never commit)
+storage/backups/
+storage/*_backup.db
+storage/*_backup_*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# superseded unverifiable log (see scripts/run_local_tests.py)
+storage/logs/ci_test_run.json
+storage/_to_delete/
+
+# local test evidence is untracked by design — a pre-commit summary can only
+# reference the parent SHA; authoritative evidence is the remote CI run
+storage/logs/local_test_summary.json
+

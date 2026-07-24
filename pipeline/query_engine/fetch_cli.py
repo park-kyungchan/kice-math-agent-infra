@@ -1,8 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Agent-Agnostic CLI Fetcher & Routing Helper (fetch_cli.py)
+Agent-Agnostic CLI Fetcher & Teacher Review Governance CLI (fetch_cli.py)
 Prevents PowerShell string escaping, CP949 encoding errors, and multi-turn token waste.
+
+Review workflow commands go through the review state machine
+(pipeline/query_engine/review_state.py). Illegal transitions perform ZERO
+database writes and exit non-zero.
+
+Exit codes:
+  0 success | 1 unexpected error | 2 usage error
+  3 illegal state transition / concurrency conflict | 4 item not found
 """
 import sys
 import io
@@ -13,32 +21,83 @@ import os
 # Base path injection
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from pipeline.query_engine.selective_fetcher import QuestionFetcher
+from pipeline.query_engine import review_state
+from pipeline.query_engine.review_state import (
+    TransitionError, ConcurrencyError, ItemNotFoundError,
+)
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
     sys.stderr.reconfigure(encoding='utf-8')
 
+EXIT_OK = 0
+EXIT_ERROR = 1
+EXIT_USAGE = 2
+EXIT_TRANSITION = 3
+EXIT_NOT_FOUND = 4
+
+
+def fail(message: str, code: int) -> None:
+    print(f"Error: {message}", file=sys.stderr)
+    sys.exit(code)
+
+
+def require(args, names) -> None:
+    missing = [n for n in names if not getattr(args, n.replace('-', '_'), None)]
+    if missing:
+        fail(f"missing required argument(s): {', '.join('--' + n for n in missing)}", EXIT_USAGE)
+
+
+def do_transition(fetcher, args, to_status, action, notes_required=False):
+    require(args, ['item', 'reviewer'])
+    if notes_required:
+        require(args, ['notes'])
+    try:
+        with fetcher.get_connection() as conn:
+            event = review_state.transition(
+                conn, args.item, to_status,
+                actor_id=args.reviewer, actor_type="TEACHER", action=action,
+                reason_code=args.reason, notes=args.notes,
+                expected_version=args.expected_version,
+            )
+        print(json.dumps(event, ensure_ascii=False, indent=2))
+        sys.exit(EXIT_OK)
+    except ItemNotFoundError as e:
+        fail(str(e), EXIT_NOT_FOUND)
+    except (TransitionError, ConcurrencyError) as e:
+        fail(str(e), EXIT_TRANSITION)
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Zero-Context Agent-Agnostic CLI Fetcher")
+    parser = argparse.ArgumentParser(description="Zero-Context Agent-Agnostic CLI Fetcher & Review Governance")
+    parser.add_argument("--db", type=str, default=None, help="Path to SQLite DB (default: storage/parsed_dataset.db)")
     parser.add_argument("--item", type=str, help="Specific item_id to fetch (e.g. 202606_MATH_DIF_15)")
     parser.add_argument("--exam", type=str, help="Exam ID or pattern (e.g. 202606)")
     parser.add_argument("--number", type=int, help="Item number (e.g. 15)")
     parser.add_argument("--axes", type=str, help="Comma-separated list of axes (e.g. Axis_1,Axis_3)")
     parser.add_argument("--layer", type=str, help="Layer name (data_infrastructure, item_reasoning, corpus_lineage)")
     parser.add_argument("--lineage", action="store_true", help="Display full precedent genealogy chain for a given item")
-    parser.add_argument("--unverified", action="store_true", help="Display items requiring HITL instructor review")
+    parser.add_argument("--unverified", action="store_true", help="[Computed] Items failing axis heuristics / Quality Plane (diagnostic view; NOT the review queue)")
     parser.add_argument("--summary", action="store_true", help="Output short summary instead of full JSON")
     parser.add_argument("--html", action="store_true", help="Generate 100% complete HTML report artifact")
     parser.add_argument("--eval", action="store_true", help="Run 4-Tier Automated Eval Harness on HTML report")
-    parser.add_argument("--review-queue", action="store_true", help="List items requiring review (REVIEW_REQUIRED or QA flag)")
-    parser.add_argument("--review-approve", action="store_true", help="Transition status of specified --item to TEACHER_APPROVED")
-    parser.add_argument("--review-revise", action="store_true", help="Transition status to TEACHER_REVISED")
-    parser.add_argument("--review-status", action="store_true", help="Print summary counts of items across all review states")
+    # --- Review governance (persisted state machine) ---
+    parser.add_argument("--review-queue", action="store_true", help="[Persisted] Items in REVIEW_REQUIRED / TEACHER_ASSIGNED / REVISION_REQUESTED")
+    parser.add_argument("--review-sync", action="store_true", help="Persist Quality-Plane findings: AUTO_ANALYSIS_COMPLETED->REVIEW_REQUIRED; requeue TEACHER_REVISED")
+    parser.add_argument("--review-assign", action="store_true", help="REVIEW_REQUIRED -> TEACHER_ASSIGNED (requires --item --reviewer)")
+    parser.add_argument("--review-approve", action="store_true", help="TEACHER_ASSIGNED -> TEACHER_APPROVED (requires --item --reviewer)")
+    parser.add_argument("--review-request-revision", action="store_true", help="TEACHER_ASSIGNED -> REVISION_REQUESTED (requires --item --reviewer --notes)")
+    parser.add_argument("--review-revise", action="store_true", help="REVISION_REQUESTED -> TEACHER_REVISED after revision applied (requires --item --reviewer --notes)")
+    parser.add_argument("--review-reject", action="store_true", help="REVIEW_REQUIRED/TEACHER_ASSIGNED -> REJECTED (requires --item --reviewer)")
+    parser.add_argument("--review-verify", action="store_true", help="TEACHER_APPROVED -> VERIFIED via independent Quality-Plane revalidation (requires --item)")
+    parser.add_argument("--review-status", action="store_true", help="State counts; with --item also prints the item's full event history")
     parser.add_argument("--reviewer", type=str, help="Reviewer ID for review actions")
-    parser.add_argument("--notes", type=str, help="Notes for review revision")
+    parser.add_argument("--notes", type=str, help="Notes for review actions")
+    parser.add_argument("--reason", type=str, help="Reason code for review actions (e.g. MATHEMATICALLY_VALID)")
+    parser.add_argument("--expected-version", type=int, default=None, help="Optimistic-locking guard: fail if item version differs")
 
     args = parser.parse_args()
-    fetcher = QuestionFetcher()
+    fetcher = QuestionFetcher(db_path=args.db)
 
     selected_axes = args.axes.split(',') if args.axes else None
 
@@ -62,54 +121,49 @@ def main():
         return
 
     if args.review_queue:
-        unverified_items = fetcher.get_unverified_questions()
-        print(json.dumps([{"item_id": u["item_id"], "review_status": u.get("review_status")} for u in unverified_items], ensure_ascii=False, indent=2))
+        with fetcher.get_connection() as conn:
+            queue = review_state.get_review_queue(conn)
+        print(json.dumps(queue, ensure_ascii=False, indent=2))
         return
+
+    if args.review_sync:
+        result = review_state.sync_review_states(fetcher)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return
+
+    if args.review_assign:
+        do_transition(fetcher, args, "TEACHER_ASSIGNED", "ASSIGN")
 
     if args.review_approve:
-        if not args.item or not args.reviewer:
-            print("Error: --item and --reviewer are required for --review-approve")
-            return
-        with fetcher.get_connection() as conn:
-            cur = conn.cursor()
-            cur.execute("SELECT review_history_json FROM question_item WHERE item_id = ?", (args.item,))
-            row = cur.fetchone()
-            if row:
-                history = json.loads(row[0] or '[]')
-                import datetime
-                history.append({"action": "APPROVE", "reviewer": args.reviewer, "timestamp": datetime.datetime.utcnow().isoformat()})
-                cur.execute("UPDATE question_item SET review_status = 'TEACHER_APPROVED', reviewer_id = ?, review_history_json = ? WHERE item_id = ?", (args.reviewer, json.dumps(history), args.item))
-                conn.commit()
-                print(f"Item {args.item} approved by {args.reviewer}.")
-            else:
-                print(f"Item {args.item} not found.")
-        return
+        do_transition(fetcher, args, "TEACHER_APPROVED", "APPROVE")
+
+    if args.review_request_revision:
+        do_transition(fetcher, args, "REVISION_REQUESTED", "REQUEST_REVISION", notes_required=True)
 
     if args.review_revise:
-        if not args.item or not args.reviewer or not args.notes:
-            print("Error: --item, --reviewer, and --notes are required for --review-revise")
-            return
-        with fetcher.get_connection() as conn:
-            cur = conn.cursor()
-            cur.execute("SELECT review_history_json FROM question_item WHERE item_id = ?", (args.item,))
-            row = cur.fetchone()
-            if row:
-                history = json.loads(row[0] or '[]')
-                import datetime
-                history.append({"action": "REVISE", "reviewer": args.reviewer, "notes": args.notes, "timestamp": datetime.datetime.utcnow().isoformat()})
-                cur.execute("UPDATE question_item SET review_status = 'TEACHER_REVISED', reviewer_id = ?, review_history_json = ? WHERE item_id = ?", (args.reviewer, json.dumps(history), args.item))
-                conn.commit()
-                print(f"Item {args.item} marked for revision by {args.reviewer}. Notes: {args.notes}")
-            else:
-                print(f"Item {args.item} not found.")
-        return
+        do_transition(fetcher, args, "TEACHER_REVISED", "REVISE", notes_required=True)
+
+    if args.review_reject:
+        do_transition(fetcher, args, "REJECTED", "REJECT")
+
+    if args.review_verify:
+        require(args, ['item'])
+        try:
+            result = review_state.revalidate_item(fetcher, args.item)
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            sys.exit(EXIT_OK)
+        except ItemNotFoundError as e:
+            fail(str(e), EXIT_NOT_FOUND)
+        except (TransitionError, ConcurrencyError) as e:
+            fail(str(e), EXIT_TRANSITION)
 
     if args.review_status:
         with fetcher.get_connection() as conn:
-            cur = conn.cursor()
-            cur.execute("SELECT review_status, COUNT(*) FROM question_item GROUP BY review_status")
-            counts = dict(cur.fetchall())
-            print(json.dumps(counts, indent=2))
+            payload = {"state_counts": review_state.get_status_counts(conn)}
+            if args.item:
+                payload["item_id"] = args.item
+                payload["events"] = review_state.get_item_events(conn, args.item)
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
         return
 
     if args.item:
@@ -131,11 +185,13 @@ def main():
             builder = HTMLReportBuilder()
             builder.build_report(item, save=True, enforce_completeness=True)
             report_path = os.path.abspath(os.path.join("storage", "html_reports", f"{args.item}_report.html"))
+            # Backslash handled outside the f-string for Python < 3.12 compatibility (PEP 701).
+            report_posix = report_path.replace("\\", "/")
             print(json.dumps({
                 "item_id": args.item,
                 "status": "HTML_REPORT_GENERATED",
                 "html_report_path": report_path,
-                "file_uri": f"file:///{report_path.replace('\\', '/')}"
+                "file_uri": f"file:///{report_posix}"
             }, ensure_ascii=False, indent=2))
             return
 

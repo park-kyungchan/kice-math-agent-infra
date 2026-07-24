@@ -13,7 +13,14 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 RAW_DIR = os.path.join(BASE_DIR, "research_data", "raw")
 STRUCTURED_DIR = os.path.join(BASE_DIR, "research_data", "structured")
 EVAL_DIR = os.path.join(BASE_DIR, "research_data", "eval")
-TAXONOMY_SPEC_PATH = os.path.abspath(os.path.join(os.path.dirname(BASE_DIR), "..", ".gemini", "antigravity", "brain", "aee69314-ac41-4615-bd94-603abb1552d8", "Taxonomy_Spec.md"))
+# LLM/agent-agnostic: the DDL SSoT lives in this repository (docs/Taxonomy_Spec.md).
+# An orchestrating agent may override via env var; never hardcode a vendor-specific tool path.
+TAXONOMY_SPEC_PATH = os.path.abspath(
+    os.environ.get(
+        "KICE_TAXONOMY_SPEC_PATH",
+        os.path.join(os.path.dirname(BASE_DIR), "docs", "Taxonomy_Spec.md"),
+    )
+)
 
 def main():
     print("==========================================================")

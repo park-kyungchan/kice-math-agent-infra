@@ -1,14 +1,14 @@
 import os
 import sqlite3
 import json
-from typing import Dict, List, Any, Optional, TypedDict, Literal
+from typing import Dict, List, Any, Optional
 
-class ClaimProvenance(TypedDict):
-    claim_type: Literal['FACT', 'INFERENCE', 'ESTIMATE', 'OPINION']
-    source: Literal['ORIGINAL_EXAM_TEXT', 'SYMPY_SOLVER', 'AGENT_REASONING', 'TEACHER_INPUT']
-    confidence_score: float
-    counter_evidence: List[str]
-    human_verified: bool
+# NOTE (v2.8.1): the former in-file `ClaimProvenance` TypedDict was dead code —
+# a type alias that nothing wrote or validated. Claim-level provenance is now
+# PERSISTED per claim in the `claim_provenance` table and served by
+# pipeline/query_engine/claim_provenance.py. This fetcher attaches only claims
+# that actually exist; it never synthesizes empty provenance (P0-4 fix).
+from pipeline.query_engine.claim_provenance import get_claims_for_items
 
 
 LAYER_MAPPING = {
@@ -119,6 +119,7 @@ class QuestionFetcher:
             'correct_rate': row['correct_rate'] if 'correct_rate' in row.keys() else None,
             'review_status': row['review_status'] if 'review_status' in row.keys() else 'AUTO_ANALYSIS_COMPLETED',
             'reviewer_id': row['reviewer_id'] if 'reviewer_id' in row.keys() else None,
+            'review_version': row['review_version'] if 'review_version' in row.keys() else 0,
             'review_history_json': row['review_history_json'] if 'review_history_json' in row.keys() else '[]',
             'latex_content': row['latex_content'],
             'asset_image_url': row['asset_image_url'],
@@ -144,19 +145,29 @@ class QuestionFetcher:
                 except Exception:
                     data['axes'][ax_key] = raw_val
 
-            # Integrate ClaimProvenance into Axis 3, 5, 6
-            if ax_key in ('Axis_3', 'Axis_5', 'Axis_6'):
-                if ax_key not in data['axes'] or not isinstance(data['axes'].get(ax_key), dict):
-                    if ax_key in data['axes'] and isinstance(data['axes'][ax_key], str):
-                        # if it's somehow a string, wrap it or ignore
-                        pass
-                    else:
-                        data['axes'][ax_key] = data['axes'].get(ax_key, {})
-                if isinstance(data['axes'].get(ax_key), dict):
-                    if 'provenance' not in data['axes'][ax_key]:
-                        data['axes'][ax_key]['provenance'] = []
-
+        # P0-4 invariant: an axis with no stored analysis stays ABSENT from
+        # data['axes']. Provenance is attached later (batch) from the
+        # claim_provenance table — real records only, never synthesized.
         return data
+
+    def _attach_claim_provenance(self, conn: sqlite3.Connection, items: List[Dict[str, Any]]) -> None:
+        """Attach persisted claim-level provenance to freshly formatted items.
+        Claims are exposed at item['claim_provenance'][axis] and, when the
+        corresponding axis analysis dict is present, mirrored at
+        item['axes'][axis]['provenance']. Absent axes are never created."""
+        try:
+            claims_by_item = get_claims_for_items(conn, [it['item_id'] for it in items])
+        except sqlite3.Error:
+            claims_by_item = {}
+        for item in items:
+            item_claims = claims_by_item.get(item['item_id'])
+            if not item_claims:
+                continue
+            item['claim_provenance'] = item_claims
+            for axis, claims in item_claims.items():
+                ax_data = item['axes'].get(axis)
+                if isinstance(ax_data, dict):
+                    ax_data['provenance'] = claims
 
     def get_questions_batch(self, item_ids: List[str], layer: Optional[str] = None, axes: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         if not item_ids:
@@ -175,13 +186,17 @@ class QuestionFetcher:
             CHUNK_SIZE = 500
             with self.get_connection() as conn:
                 cur = conn.cursor()
+                cur.execute("PRAGMA table_info(question_item)")
+                q_cols = [r[1] for r in cur.fetchall()]
+                version_col = "q.review_version," if 'review_version' in q_cols else ""
+                fresh_items: List[Dict[str, Any]] = []
                 for i in range(0, len(missing_ids), CHUNK_SIZE):
                     chunk = missing_ids[i:i + CHUNK_SIZE]
                     placeholders = ','.join(['?'] * len(chunk))
                     sql = f'''
-                        SELECT 
+                        SELECT
                             q.item_id, q.exam_id, q.track, q.item_number, q.score, q.answer, q.correct_rate,
-                            q.review_status, q.reviewer_id, q.review_history_json,
+                            q.review_status, q.reviewer_id, q.review_history_json, {version_col}
                             q.latex_content, q.asset_image_url,
                             a.axis1_curriculum, a.axis2_raw_parsing, a.axis3_symbolic_modeling,
                             a.axis4_contextual_tree, a.axis5_traps_verification, a.axis6_genealogy,
@@ -194,7 +209,10 @@ class QuestionFetcher:
                     rows = cur.fetchall()
                     for row in rows:
                         item_dict = self._format_question_row(row)
+                        fresh_items.append(item_dict)
                         self._question_cache[item_dict['item_id']] = item_dict
+                # Attach persisted claim-level provenance (real records only)
+                self._attach_claim_provenance(conn, fresh_items)
 
         # Collect and apply optional axis filtering in memory
         results = []

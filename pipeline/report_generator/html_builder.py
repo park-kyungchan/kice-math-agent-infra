@@ -298,6 +298,7 @@ class HTMLReportBuilder:
         correct_rate = item_data.get('correct_rate')
         review_status = item_data.get('review_status', 'AUTO_ANALYSIS_COMPLETED')
         reviewer_id = item_data.get('reviewer_id')
+        review_version = item_data.get('review_version', 0)
         review_history_json = item_data.get('review_history_json', '[]')
         latex_content = item_data.get('latex_content', '')
         asset_image_url = item_data.get('asset_image_url', '')
@@ -316,7 +317,9 @@ class HTMLReportBuilder:
         # Process Asset Image (Base64 Data URI for 100% Guaranteed Browser Rendering)
         img_src = convert_image_to_base64_data_uri(asset_image_url) if asset_image_url else None
         if not img_src and asset_image_url:
-            img_src = f"file:///{asset_image_url.replace('\\', '/')}"
+            # NOTE: backslash kept outside the f-string expression for Python < 3.12 compatibility (PEP 701).
+            _asset_posix = str(asset_image_url).replace("\\", "/")
+            img_src = f"file:///{_asset_posix}"
         has_asset = bool(img_src)
 
         # Dynamic Question Header & Split Layout
@@ -530,6 +533,7 @@ class HTMLReportBuilder:
             <span class="pill pill-green" data-key="correct_rate">Correct Rate: {correct_rate if correct_rate is not None else 'N/A'}</span>
             <span class="pill" data-key="review_status">Review: {html.escape(str(review_status))}</span>
             <span class="pill" data-key="reviewer_id">Reviewer: {html.escape(str(reviewer_id)) if reviewer_id else 'None'}</span>
+            <span class="pill" data-key="review_version">Rev: v{html.escape(str(review_version))}</span>
             <span class="pill" data-key="review_history_json" style="display:none;">{html.escape(str(review_history_json))}</span>
         </div>
     </header>
