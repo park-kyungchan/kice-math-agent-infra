@@ -1,0 +1,24 @@
+{
+  "curriculum_terms": {
+    "수학I": "Algebra",
+    "수학II": "Calculus_I",
+    "미적분": "Calculus_II",
+    "기하": "Geometry",
+    "확률과 통계": "Probability_and_Statistics"
+  },
+  "condition_terms": {
+    "모든 실수 x에 대하여": "FOR_ALL_REAL_X",
+    "오직 하나의 극값을 가짐": "SINGLE_LOCAL_EXTREMUM",
+    "실수 전체에서 미분가능": "DIFFERENTIABLE_ON_REAL_LINE",
+    "역방향 추론": "REVERSE_RECURRENCE_DEDUCTION",
+    "정적분으로 정의된 함수": "INTEGRAL_DEFINED_FUNCTION",
+    "절댓값 함수": "ABSOLUTE_VALUE_FUNCTION",
+    "차함수": "DIFFERENCE_FUNCTION"
+  },
+  "heuristics_terms": {
+    "삼차함수 2:1 비율관계": "SKILL_CUBIC_RATIO_2_1",
+    "사차함수 3:1 비율관계": "SKILL_QUARTIC_RATIO_3_1",
+    "삼차함수 접선 넓이 공식": "SKILL_CUBIC_TANGENT_AREA",
+    "변곡점 점대칭성": "SKILL_INFLECTION_POINT_SYMMETRY"
+  }
+}

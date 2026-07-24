@@ -1,81 +1,78 @@
 # Zero-Context AI Agent Infra Entrypoint Guide (ENTRYPOINT.md)
 
-Welcome to the **CSAT Mathematics Zero-Context Agent Infrastructure** inside kice-math-agent-infra/.
-This document is your **Loading Order 1 Entrypoint**. Read this file first to achieve 100% project understanding while minimizing context token overhead.
+Welcome to the **CSAT Mathematics Zero-Context Agent Infrastructure** inside `kice-math-agent-infra/`.
+This document is your **Loading Order 1 Entrypoint Guide**.
 
 ---
 
 ## 1. Quick Project Summary
-- **Target Domain**: 2027학년도 6월 평가원 기출 및 최근 10년+ 수능/평가원 수학 (공통, 미적분, 기하, 확률과통계).
-- **Core Purpose**: End-to-end infrastructure allowing zero-context AI agents to retrieve, analyze, and reason about math questions using a 6-Axis Multi-Dimensional Taxonomy Schema without prior context.
-- **Dataset Scale**: **1,350 CSAT/KICE exam questions** across 45 PDF papers (2021~2026) and **1,350 high-res 300 DPI diagram PNG assets** loaded into a 4-Tier SQLite DB (storage/parsed_dataset.db).
+- **Target Domain**: 2027 KICE Mock & CSAT Mathematics (Common: Algebra/Calculus I, Elective: Calculus II, Geometry, Prob & Stat).
+- **Core Purpose**: End-to-end infrastructure allowing zero-context AI agents to retrieve, reason, verify, and link math questions using the **Master 8-Axis Taxonomy Schema**.
+- **Dataset Scale**: **1,350 CSAT/KICE exam questions** across 45 PDF papers (2021~2026) and **1,350 high-res 300 DPI diagram PNG assets** loaded into a 4-Tier SQLite DB (`storage/parsed_dataset.db`).
 
 ---
 
 ## 2. Recommended Context Loading Protocol (Loading Order 1 ~ 4)
 
-To save tokens, do NOT load all files at once. Follow this 4-step protocol:
-
-`mermaid
+```mermaid
 graph TD
-    LO1[Loading Order 1: ENTRYPOINT.md & MANIFEST.json<br/>- Project Summary, Directory Map, DB Location] --> LO2[Loading Order 2: docs/Taxonomy_Spec.md<br/>- 6-Axis Schema & 4-Tier DB DDL]
-    LO2 --> LO3[Loading Order 3: pipeline/agents_spec/router_orchestrator_agent.md<br/>- Master Router Protocol & Selective Fetching]
-    LO3 --> LO4[Loading Order 4: pipeline/query_engine/selective_fetcher.py<br/>- Python 1-line DB/Axis Fetcher Helper]
-`
+    LO1[Loading Order 1: ENTRYPOINT.md & MANIFEST.json<br/>- Project Summary, Directory Map, DB Location] --> LO2[Loading Order 2: docs/Taxonomy_Spec.md<br/>- Master 8-Axis Schema & 4-Tier DB DDL]
+    LO2 --> LO3[Loading Order 3: pipeline/agents_spec/router_orchestrator_agent.md<br/>- Master Router Protocol & 100% English Agent Specs]
+    LO3 --> LO4[Loading Order 4: pipeline/query_engine/selective_fetcher.py<br/>- Python 1-line DB & Batch Fetcher Helper]
+```
 
-- **Loading Order 1 (This File & MANIFEST.json)**: ~800 Tokens ➔ High-level overview & entrypoints.
-- **Loading Order 2 ([docs/Taxonomy_Spec.md](file:///c:/Users/packr/Claude/kice-math-agent-infra/docs/Taxonomy_Spec.md))**: ~1,500 Tokens ➔ 6-Axis Schema & 4-Tier DB Table DDLs.
-- **Loading Order 3 ([pipeline/agents_spec/router_orchestrator_agent.md](file:///c:/Users/packr/Claude/kice-math-agent-infra/pipeline/agents_spec/router_orchestrator_agent.md))**: ~1,500 Tokens ➔ Routing protocol & axis prompt specs.
-- **Loading Order 4 ([pipeline/query_engine/selective_fetcher.py](file:///c:/Users/packr/Claude/kice-math-agent-infra/pipeline/query_engine/selective_fetcher.py))**: On-Demand ➔ 1-line Python DB query helper.
+- **Loading Order 1 (This File & MANIFEST.json)**: High-level overview & entrypoints.
+- **Loading Order 2 ([docs/Taxonomy_Spec.md](file:///c:/Users/packr/Claude/kice-math-agent-infra/docs/Taxonomy_Spec.md))**: Master 8-Axis Schema & 4-Tier DB Table DDLs.
+- **Loading Order 3 ([pipeline/agents_spec/router_orchestrator_agent.md](file:///c:/Users/packr/Claude/kice-math-agent-infra/pipeline/agents_spec/router_orchestrator_agent.md))**: 100% English Master Router & 8 Axis Agent Specs.
+- **Loading Order 4 ([pipeline/query_engine/selective_fetcher.py](file:///c:/Users/packr/Claude/kice-math-agent-infra/pipeline/query_engine/selective_fetcher.py))**: High-performance batch fetcher helper (`get_questions_batch()`, latency $<10\text{ ms}$).
 
 ---
 
 ## 3. Directory Layout & Key File Map
 
-`
+```
 kice-math-agent-infra/
 ├── ENTRYPOINT.md                       <-- [You are here] Order 1 Entrypoint Guide
-├── MANIFEST.json                       <-- Structured System Manifest
+├── MANIFEST.json                       <-- Structured System Manifest (8-Axis Spec)
 ├── docs/                               <-- Master Specifications & Plans
-│   ├── Taxonomy_Spec.md                <-- Order 2: 6-Axis Schema & DB DDLs
-│   ├── Master_Blueprint.md             <-- Overall System Architecture & Roadmap
-│   ├── Scrapling_Research_Plan.md      <-- Web Research & Scrapling Integration Spec
-│   ├── PDF_Parsing_Plan.md             <-- PDF/PNG Parsing Engine Spec
-│   ├── Backlog.md                      <-- Project Backlog Items
-│   └── Walkthrough_Report.md           <-- Phase 1 & 2 Completion Report
+│   ├── Taxonomy_Spec.md                <-- Order 2: Master 8-Axis Schema & DB DDLs
+│   ├── Korean_Math_Glossary.json       <-- Korean-English Math Lexicon
+│   ├── Master_Blueprint.md             <-- System Architecture Roadmap
+│   └── Walkthrough_Report.md           <-- Phase Completion Report
 ├── pipeline/                           <-- Source Code & Agent Specifications
-│   ├── query_engine/                   <-- Order 4: Helper Modules
-│   │   ├── selective_fetcher.py        <-- 1-line DB & Axis Fetcher Helper
+│   ├── query_engine/                   <-- Order 4: Query Helpers
+│   │   ├── selective_fetcher.py        <-- Batch & 8-Axis Selective Fetcher
 │   │   └── routing_index.json          <-- Keyword to Routing Key Index
-│   ├── agents_spec/                    <-- Order 3: 7 Agent Spec Prompts
+│   ├── agents_spec/                    <-- Order 3: 9 100% English Agent Prompts
 │   │   ├── router_orchestrator_agent.md
-│   │   ├── axis1_concept_routing_agent.md
-│   │   ├── axis2_condition_parsing_agent.md
-│   │   ├── axis3_misconception_trap_agent.md
-│   │   ├── axis4a_core_idea_lineage_agent.md
-│   │   ├── axis4b_condition_mutation_agent.md
-│   │   └── axis5_target_2027_transformation_agent.md
-│   ├── research_spiders/               <-- Scrapling Research Spiders
-│   └── dataset_parser/                 <-- PDF Segmenter, LaTeX Extractor & Cropper
-├── research_data/                      <-- Raw Scraped JSONs & Eval Reports
-│   ├── raw/                            <-- Scraped JSON Data
-│   └── eval/                           <-- Step 1 & 2 Eval Reports (99.9% Pass)
-└── storage/                            <-- 4-Tier Database & Assets
-    ├── parsed_dataset.db               <-- 1,350 Items SQLite DB
-    └── assets/                         <-- 1,350 High-Res Diagram PNGs
-`
+│   │   ├── axis1_curriculum_agent.md
+│   │   ├── axis2_raw_parsing_agent.md
+│   │   ├── axis3_symbolic_modeling_agent.md
+│   │   ├── axis4_contextual_tree_agent.md
+│   │   ├── axis5_traps_verification_agent.md
+│   │   ├── axis6_genealogy_agent.md
+│   │   ├── axis7_mutation_agent.md
+│   │   └── axis8_knowledge_graph_agent.md
+│   └── migrate_db_8axis.py             <-- DB Migration Engine
+├── storage/                            <-- 4-Tier Database & Assets
+│   ├── parsed_dataset.db               <-- 1,350 Items SQLite DB (8 Flat Columns)
+│   ├── kice_math_concept_map.json      <-- Ground-Truth Math Concept Map Dataset
+│   └── assets/                         <-- 1,350 High-Res Diagram PNGs
+└── tests/                              <-- Automated Verification Test Suite
+    ├── test_db_migration.py            <-- DB Migration Integrity Test
+    ├── test_selective_fetcher.py       <-- Batch Fetch & Latency SLA Test (<10ms)
+    └── test_concept_map.py             <-- KaTeX & Concept Map Test
+```
 
 ---
 
 ## 4. Quick 1-Line Python Query Snippet for Agents
 
-To fetch a question and its selected axes without writing raw SQL:
-
-`python
+```python
 from pipeline.query_engine.selective_fetcher import QuestionFetcher
 
 fetcher = QuestionFetcher()
-# Fetch question item with specific axes (saves tokens!)
-data = fetcher.get_question('202411_MATH_DIF_22', axes=['Axis_1', 'Axis_2'])
-print(data['item_id'], data['latex_content'], data['axes'])
-`
+# Fetch question item with selected axes in single batch query (<10ms)
+data = fetcher.get_question('202411_MATH_DIF_22', axes=['Axis_1', 'Axis_3', 'Axis_4'])
+print(data['item_id'], data['answer'], data['axes'])
+```
