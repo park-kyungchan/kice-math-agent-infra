@@ -3,9 +3,13 @@
 Reproducible test-run evidence recorder.
 Runs the unittest suite and writes a machine-verifiable summary that binds the
 result to a specific commit, command, and environment — replacing the old
-unverifiable storage/logs/ci_test_run.json (renamed: local_test_summary.json,
-because a locally produced log is NOT CI evidence; CI evidence is the GitHub
-Actions workflow run for the same commit SHA).
+unverifiable storage/logs/ci_test_run.json.
+
+IMPORTANT — the output is deliberately UNTRACKED (gitignored): a pre-commit
+summary can only ever reference the PARENT commit, so committing it would ship
+permanently stale self-audit evidence (an audit that lies is worse than no
+audit). Authoritative evidence = the remote 'governance-ci' workflow run for
+the commit SHA; this local summary is for the operator's own console/session.
 
 Usage: python scripts/run_local_tests.py [--output PATH]
 """

@@ -97,13 +97,17 @@ INDEX_DDL = (
 
 
 def create_physical_backup(db_path: str) -> str:
+    """Backups live NEXT TO the target DB (backups/ sibling dir), so migrating
+    a copy (e.g. under /tmp or in tests) never writes into the live repo."""
     if not os.path.exists(db_path):
         raise FileNotFoundError(f"Database not found at {db_path}")
-    os.makedirs(BACKUP_DIR, exist_ok=True)
+    backup_dir = os.path.join(os.path.dirname(os.path.abspath(db_path)) or '.', 'backups')
+    os.makedirs(backup_dir, exist_ok=True)
     with open(db_path, 'rb') as f:
         digest = hashlib.sha256(f.read()).hexdigest()[:8]
     ts = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
-    backup_path = os.path.join(BACKUP_DIR, f'parsed_dataset_pre_v2.8.1_{ts}_{digest}.db')
+    base = os.path.splitext(os.path.basename(db_path))[0]
+    backup_path = os.path.join(backup_dir, f'{base}_pre_v2.8.1_{ts}_{digest}.db')
     shutil.copy2(db_path, backup_path)
     print(f"[Phase 0] Backup created: {backup_path}")
     return backup_path

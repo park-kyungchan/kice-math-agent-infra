@@ -13,3 +13,8 @@ storage/*_backup_*.db
 # superseded unverifiable log (see scripts/run_local_tests.py)
 storage/logs/ci_test_run.json
 storage/_to_delete/
+
+# local test evidence is untracked by design — a pre-commit summary can only
+# reference the parent SHA; authoritative evidence is the remote CI run
+storage/logs/local_test_summary.json
+
