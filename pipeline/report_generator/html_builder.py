@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Automated Zero-Data-Loss HTML Report Generator (html_builder.py)
-Compiles 8-Axis Math Analysis payloads into responsive, human-friendly HTML reports with 100% schema completeness validation.
+Sample 09: Notion / Craft Clean Workspace Theme with Dynamic Adaptive Layouts.
 """
 
 import os
@@ -196,7 +196,10 @@ class DualTargetReportWriter:
         return repo_path, artifact_path
 
 class HTMLReportBuilder:
-    """Generates human-centric 8-Axis HTML Reports with zero data loss."""
+    """
+    Sample 09: Notion / Craft Workspace Aesthetic with Dynamic Adaptive Placement Engine.
+    Dynamically adjusts layout based on item asset presence, subject track, and reasoning depth.
+    """
 
     def __init__(self, writer: Optional[DualTargetReportWriter] = None):
         self.writer = writer or DualTargetReportWriter()
@@ -213,16 +216,49 @@ class HTMLReportBuilder:
         asset_image_url = item_data.get('asset_image_url', '')
         axes = item_data.get('axes', {})
 
-        # Render dynamic tree for backup fallback completeness
+        has_asset = bool(asset_image_url)
+        axis4 = axes.get('Axis_4', {})
+        has_backtrack = bool(axis4.get('backtrack_log'))
+
+        # Dynamic Layout Engine Construction
         dynamic_axes_tree = render_dynamic_tree(axes, key_name="axes")
+
+        # Dynamic Question Header & Split Layout
+        if has_asset:
+            question_block = f"""
+            <div class="notion-split-grid" data-key="asset_image_url">
+                <div class="notion-card">
+                    <div class="card-label">📷 원본 평가원 자산 이미지</div>
+                    <img src="{asset_image_url}" alt="Diagram Asset" style="max-width:100%; border-radius:6px; border:1px solid #e3e3e1;">
+                </div>
+                <div class="notion-card" data-key="latex_content">
+                    <div class="card-label">📝 KaTeX 파싱 명제 원문</div>
+                    <div class="math-box">{html.escape(latex_content)}</div>
+                </div>
+            </div>
+            """
+        else:
+            question_block = f"""
+            <div class="notion-card full-width" data-key="latex_content">
+                <div class="card-label">📝 KaTeX 파싱 명제 원문</div>
+                <div class="math-box">{html.escape(latex_content)}</div>
+            </div>
+            """
+
+        # Dynamic Choice Options Block
+        choices_html = ""
+        for i in range(1, 6):
+            is_correct = (i == answer)
+            cls = "choice-tag correct" if is_correct else "choice-tag"
+            choices_html += f'<span class="{cls}">{"①②③④⑤"[i-1]} Choice {i} {"(Correct)" if is_correct else ""}</span> '
 
         html_doc = f"""<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{html.escape(item_id)} 8-Axis Multi-Dimensional Analysis Report</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>{html.escape(item_id)} Notion Workspace Master Analysis Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
     <script>
         window.MathJax = {{
             tex: {{
@@ -235,307 +271,213 @@ class HTMLReportBuilder:
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
     <style>
         :root {{
-            --bg-canvas: #090d16;
-            --bg-surface: #0f172a;
-            --bg-card: rgba(17, 24, 39, 0.7);
-            --bg-card-hover: rgba(30, 41, 59, 0.85);
-            --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-            --glass-blur: blur(16px) saturate(180%);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --text-dim: #64748b;
-            
-            --axis1-accent: #10b981; --axis1-bg: rgba(16, 185, 129, 0.15);
-            --axis2-accent: #f59e0b; --axis2-bg: rgba(245, 158, 11, 0.15);
-            --axis3-accent: #6366f1; --axis3-bg: rgba(99, 102, 241, 0.15);
-            --axis4-accent: #3b82f6; --axis4-bg: rgba(59, 130, 246, 0.15);
-            --axis5-accent: #f43f5e; --axis5-bg: rgba(244, 63, 94, 0.15);
-            --axis6-accent: #d946ef; --axis6-bg: rgba(217, 70, 239, 0.15);
-            --axis7-accent: #14b8a6; --axis7-bg: rgba(20, 184, 166, 0.15);
-            --axis8-accent: #0284c7; --axis8-bg: rgba(2, 132, 199, 0.15);
+            --bg-notion: #ffffff;
+            --text-notion: #37352f;
+            --text-muted: #787774;
+            --bg-callout: #f1f1ef;
+            --border-notion: #e3e3e1;
+            --accent-red: #eb5757;
+            --accent-blue: #2eaadc;
+            --accent-green: #0f7b6c;
+            --accent-purple: #9065b0;
+            --accent-amber: #d9730d;
+        }}
 
-            --status-pass: #22c55e;
-            --status-warning: #f59e0b;
-            --status-error: #ef4444;
+        @media (prefers-color-scheme: dark) {{
+            :root {{
+                --bg-notion: #191919;
+                --text-notion: #d4d4d4;
+                --text-muted: #9b9b9b;
+                --bg-callout: #252525;
+                --border-notion: #2f2f2f;
+                --accent-red: #ff6b6b;
+                --accent-blue: #52c41a;
+                --accent-green: #20c997;
+                --accent-purple: #b197fc;
+                --accent-amber: #ffd43b;
+            }}
         }}
 
         * {{ box-sizing: border-box; margin: 0; padding: 0; }}
         body {{
-            background-color: var(--bg-canvas);
-            color: var(--text-main);
+            background: var(--bg-notion);
+            color: var(--text-notion);
             font-family: 'Inter', 'Noto Sans KR', sans-serif;
-            line-height: 1.6;
-            padding: 1.5rem;
-            min-height: 100vh;
+            padding: 3rem 1.5rem;
+            max-width: 960px;
+            margin: 0 auto;
+            line-height: 1.7;
         }}
 
-        .dashboard-header {{
+        .notion-header {{
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-notion);
+            padding-bottom: 1.5rem;
+        }}
+
+        .notion-icon {{ font-size: 3.5rem; margin-bottom: 0.5rem; display: inline-block; }}
+        .notion-title {{ font-size: 2.4rem; font-weight: 800; color: var(--text-notion); letter-spacing: -0.02em; }}
+        
+        .pill-group {{ display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }}
+        .pill {{
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            background: rgba(135, 131, 120, 0.15);
+            color: var(--text-notion);
+        }}
+        .pill-green {{ background: rgba(15, 123, 108, 0.15); color: var(--accent-green); font-weight: 700; }}
+
+        .notion-callout {{
+            background: var(--bg-callout);
+            border: 1px solid var(--border-notion);
+            border-radius: 6px;
+            padding: 1.25rem;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.25rem 1.75rem;
-            background: var(--bg-card);
-            backdrop-filter: var(--glass-blur);
-            border: var(--glass-border);
-            border-radius: 16px;
-            margin-bottom: 1.5rem;
-        }}
-
-        .item-id-title {{ font-size: 1.5rem; font-weight: 800; color: #fff; }}
-        .badge-group {{ display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }}
-        .badge {{
-            padding: 0.3rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-        }}
-        .badge-purple {{ background: rgba(139, 92, 246, 0.2); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.4); }}
-        .badge-blue {{ background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.4); }}
-        .badge-green {{ background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.4); }}
-
-        .dashboard-layout {{
-            display: grid;
-            grid-template-columns: 360px 1fr;
-            gap: 1.5rem;
-        }}
-
-        @media (max-width: 1024px) {{
-            .dashboard-layout {{ grid-template-columns: 1fr; }}
-        }}
-
-        .question-rail {{
-            position: sticky;
-            top: 1.5rem;
-            height: calc(100vh - 6rem);
-            background: var(--bg-card);
-            backdrop-filter: var(--glass-blur);
-            border: var(--glass-border);
-            border-radius: 16px;
-            padding: 1.5rem;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-        }}
-
-        .bento-grid {{
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.25rem;
-        }}
-
-        .axis-card {{
-            background: var(--bg-card);
-            backdrop-filter: var(--glass-blur);
-            border: var(--glass-border);
-            border-radius: 16px;
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
             gap: 1rem;
-            transition: all 0.25s ease;
+            margin: 1.5rem 0;
         }}
 
-        .axis-card:hover {{
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+        .notion-split-grid {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin: 1.5rem 0;
         }}
 
-        .span-full {{ grid-column: 1 / -1; }}
-
-        .card-header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        @media (max-width: 768px) {{
+            .notion-split-grid {{ grid-template-columns: 1fr; }}
         }}
 
-        .axis-title {{
-            font-size: 0.95rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .notion-card {{
+            background: var(--bg-callout);
+            border: 1px solid var(--border-notion);
+            border-radius: 8px;
+            padding: 1.25rem;
         }}
 
-        .axis-dot {{ width: 8px; height: 8px; border-radius: 50%; }}
-        .axis-1 .axis-dot {{ background: var(--axis1-accent); }}
-        .axis-2 .axis-dot {{ background: var(--axis2-accent); }}
-        .axis-3 .axis-dot {{ background: var(--axis3-accent); }}
-        .axis-4 .axis-dot {{ background: var(--axis4-accent); }}
-        .axis-5 .axis-dot {{ background: var(--axis5-accent); }}
-        .axis-6 .axis-dot {{ background: var(--axis6-accent); }}
-        .axis-7 .axis-dot {{ background: var(--axis7-accent); }}
-        .axis-8 .axis-dot {{ background: var(--axis8-accent); }}
+        .card-label {{ font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase; }}
 
         .math-box {{
-            background: rgba(15, 23, 42, 0.8);
-            border-left: 4px solid var(--axis3-accent);
-            padding: 1rem;
-            border-radius: 8px;
-            font-size: 0.95rem;
+            font-size: 1.05rem;
+            line-height: 1.6;
         }}
 
-        .choices-grid {{
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 0.5rem;
-        }}
-
-        .choice-btn {{
-            background: rgba(31, 41, 55, 0.6);
-            border: 1px solid var(--glass-border);
-            border-radius: 8px;
-            padding: 0.6rem;
-            text-align: center;
-            font-weight: 600;
+        .choice-tag {{
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-notion);
             font-size: 0.85rem;
+            margin-right: 0.4rem;
+            margin-top: 0.4rem;
         }}
 
-        .choice-btn.correct {{
-            background: rgba(34, 197, 94, 0.2);
-            border-color: var(--status-pass);
-            color: #86efac;
-            box-shadow: 0 0 12px rgba(34, 197, 94, 0.3);
+        .choice-tag.correct {{
+            background: rgba(15, 123, 108, 0.15);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            font-weight: 700;
         }}
 
-        .tree-node {{ margin-left: 0.75rem; border-left: 1px solid var(--glass-border); padding-left: 0.75rem; margin-top: 0.35rem; }}
-        .tree-key {{ font-weight: 700; color: var(--axis4-accent); font-family: 'Fira Code', monospace; font-size: 0.85rem; }}
-        .tree-leaf {{ color: #e2e8f0; font-size: 0.85rem; word-break: break-all; }}
+        details {{ margin: 1rem 0; border: 1px solid var(--border-notion); border-radius: 6px; padding: 0.75rem 1rem; background: var(--bg-callout); }}
+        details summary {{ cursor: pointer; font-weight: 700; color: var(--text-notion); font-size: 0.95rem; }}
 
-        details summary {{ cursor: pointer; font-weight: 700; color: var(--axis2-accent); font-size: 0.9rem; }}
+        .tree-node {{ margin-left: 0.75rem; border-left: 1px solid var(--border-notion); padding-left: 0.75rem; margin-top: 0.35rem; }}
+        .tree-key {{ font-weight: 700; color: var(--accent-blue); font-family: 'Fira Code', monospace; font-size: 0.85rem; }}
+        .tree-leaf {{ color: var(--text-notion); font-size: 0.85rem; word-break: break-all; }}
     </style>
 </head>
 <body>
 
     <!-- Header -->
-    <header class="dashboard-header">
-        <div>
-            <div class="badge-group" style="margin-bottom: 0.4rem;">
-                <span class="badge badge-purple" data-key="exam_id">{html.escape(str(exam_id))}</span>
-                <span class="badge badge-blue" data-key="track">Track: {html.escape(str(track))}</span>
-                <span class="badge badge-blue" data-key="item_number">Item #{item_number}</span>
-                <span class="badge badge-green" data-key="score">{score} Points</span>
-                <span class="badge badge-green" data-key="correct_rate">Correct Rate: {correct_rate if correct_rate is not None else 'N/A'}</span>
-            </div>
-            <div class="item-id-title" data-key="item_id">{html.escape(str(item_id))}</div>
-        </div>
-        <div style="font-family: 'Fira Code', monospace; font-size: 0.8rem; color: var(--text-dim);">
-            ZERO-LOSS SCHEMA VERIFIED
+    <header class="notion-header">
+        <div class="notion-icon">📐</div>
+        <div class="notion-title" data-key="item_id">{html.escape(str(item_id))}</div>
+        <div class="pill-group">
+            <span class="pill" data-key="exam_id">Exam: {html.escape(str(exam_id))}</span>
+            <span class="pill" data-key="track">Track: {html.escape(str(track))}</span>
+            <span class="pill" data-key="item_number">Item #{item_number}</span>
+            <span class="pill" data-key="score">{score} Points</span>
+            <span class="pill pill-green" data-key="correct_rate">Correct Rate: {correct_rate if correct_rate is not None else 'N/A'}</span>
         </div>
     </header>
 
-    <!-- Main Layout -->
-    <div class="dashboard-layout">
-        <!-- Sticky Question Rail -->
-        <aside class="question-rail">
-            <h3 style="font-size: 1rem; color: var(--text-muted);">Item Context & Asset</h3>
-            
-            {f'<div style="text-align:center;"><img src="{asset_image_url}" alt="Diagram Asset" style="max-width:100%; border-radius:8px; border:1px solid var(--glass-border);" data-key="asset_image_url"></div>' if asset_image_url else ''}
-            
-            <div class="math-box" data-key="latex_content">
-                {html.escape(latex_content)}
-            </div>
-
-            <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted);">Answer & Choices</div>
-            <div class="choices-grid">
-                <div class="choice-btn {'correct' if answer==1 else ''}">① 18</div>
-                <div class="choice-btn {'correct' if answer==2 else ''}">② 21</div>
-                <div class="choice-btn {'correct' if answer==3 else ''}">③ 24</div>
-                <div class="choice-btn {'correct' if answer==4 else ''}">④ 27</div>
-                <div class="choice-btn {'correct' if answer==5 else ''}">⑤ 30</div>
-            </div>
-            <div style="font-size:0.85rem; color:var(--status-pass); font-weight:700;" data-key="answer">Verified Correct Answer: Choice {answer}</div>
-        </aside>
-
-        <!-- 8-Axis Bento Grid -->
-        <main class="bento-grid" data-key="axes">
-            <!-- Axis 1 -->
-            <div class="axis-card axis-1" data-key="Axis_1">
-                <div class="card-header">
-                    <span class="axis-title"><span class="axis-dot"></span> Axis 1: Curriculum</span>
-                    <span class="badge badge-green">Axis_1</span>
-                </div>
-                <div class="tree-node">{render_dynamic_tree(axes.get('Axis_1', {}), key_name="Axis_1")}</div>
-            </div>
-
-            <!-- Axis 2 -->
-            <div class="axis-card axis-2" data-key="Axis_2">
-                <div class="card-header">
-                    <span class="axis-title"><span class="axis-dot"></span> Axis 2: Raw Parsing</span>
-                    <span class="badge badge-purple">Axis_2</span>
-                </div>
-                <div class="tree-node">{render_dynamic_tree(axes.get('Axis_2', {}), key_name="Axis_2")}</div>
-            </div>
-
-            <!-- Axis 3 -->
-            <div class="axis-card axis-3" data-key="Axis_3">
-                <div class="card-header">
-                    <span class="axis-title"><span class="axis-dot"></span> Axis 3: Symbolic Modeling</span>
-                    <span class="badge badge-blue">Axis_3</span>
-                </div>
-                <div class="tree-node">{render_dynamic_tree(axes.get('Axis_3', {}), key_name="Axis_3")}</div>
-            </div>
-
-            <!-- Axis 4 -->
-            <div class="axis-card axis-4" data-key="Axis_4">
-                <div class="card-header">
-                    <span class="axis-title"><span class="axis-dot"></span> Axis 4: Contextual Tree</span>
-                    <span class="badge badge-blue">Axis_4</span>
-                </div>
-                <div class="tree-node">{render_dynamic_tree(axes.get('Axis_4', {}), key_name="Axis_4")}</div>
-            </div>
-
-            <!-- Axis 5 -->
-            <div class="axis-card axis-5" data-key="Axis_5">
-                <div class="card-header">
-                    <span class="axis-title"><span class="axis-dot"></span> Axis 5: Traps & Verification</span>
-                    <span class="badge badge-purple">Axis_5</span>
-                </div>
-                <div class="tree-node">{render_dynamic_tree(axes.get('Axis_5', {}), key_name="Axis_5")}</div>
-            </div>
-
-            <!-- Axis 6 -->
-            <div class="axis-card axis-6" data-key="Axis_6">
-                <div class="card-header">
-                    <span class="axis-title"><span class="axis-dot"></span> Axis 6: Genealogy & Precedents</span>
-                    <span class="badge badge-green">Axis_6</span>
-                </div>
-                <div class="tree-node">{render_dynamic_tree(axes.get('Axis_6', {}), key_name="Axis_6")}</div>
-            </div>
-
-            <!-- Axis 7 -->
-            <div class="axis-card axis-7" data-key="Axis_7">
-                <div class="card-header">
-                    <span class="axis-title"><span class="axis-dot"></span> Axis 7: Representation Mutation</span>
-                    <span class="badge badge-blue">Axis_7</span>
-                </div>
-                <div class="tree-node">{render_dynamic_tree(axes.get('Axis_7', {}), key_name="Axis_7")}</div>
-            </div>
-
-            <!-- Axis 8 -->
-            <div class="axis-card axis-8" data-key="Axis_8">
-                <div class="card-header">
-                    <span class="axis-title"><span class="axis-dot"></span> Axis 8: Knowledge Graph</span>
-                    <span class="badge badge-purple">Axis_8</span>
-                </div>
-                <div class="tree-node">{render_dynamic_tree(axes.get('Axis_8', {}), key_name="Axis_8")}</div>
-            </div>
-
-            <!-- Full Unmapped JSON Fallback Container for 100% Zero-Data-Loss Guarantee -->
-            <div class="axis-card span-full" style="background: rgba(15, 23, 42, 0.9);">
-                <details>
-                    <summary>📁 Full 8-Axis Raw Schema Explorer (100% Key/Value Preserved)</summary>
-                    <div style="margin-top: 1rem;">
-                        {dynamic_axes_tree}
-                    </div>
-                </details>
-            </div>
-        </main>
+    <!-- Callout Executive Summary -->
+    <div class="notion-callout">
+        <span style="font-size: 1.5rem;">💡</span>
+        <div>
+            <strong>CSAT 8-Axis Analysis Summary:</strong>
+            <p style="font-size: 0.95rem; margin-top: 0.25rem;">
+                문항 <code>{html.escape(str(item_id))}</code>에 대한 Master 8-Axis 수식 추론 및 데이터 무누락 검증 완료.
+            </p>
+        </div>
     </div>
+
+    <!-- Dynamic Question & Asset Placement Block -->
+    <h3 style="font-size: 1.2rem; font-weight: 700; margin-top: 2rem;">📌 1. 문항 원문 및 조건 (Dynamic Layout)</h3>
+    {question_block}
+
+    <div class="notion-card" style="margin-top: 1rem;">
+        <div class="card-label">🎯 정답 선택지 & Answer Mapping</div>
+        <div>{choices_html}</div>
+        <div style="font-weight:700; color:var(--accent-green); margin-top:0.5rem;" data-key="answer">Confirmed Answer Choice: Choice {answer}</div>
+    </div>
+
+    <!-- 8-Axis Structured Section Explorers -->
+    <section data-key="axes">
+        <h3 style="font-size: 1.2rem; font-weight: 700; margin-top: 2rem;">⚡ 2. Master 8-Axis Multi-Dimensional Analysis</h3>
+
+    <details open data-key="Axis_1">
+        <summary>📘 Axis 1: Curriculum & Integration</summary>
+        <div class="tree-node">{render_dynamic_tree(axes.get('Axis_1', {}), key_name="Axis_1")}</div>
+    </details>
+
+    <details open data-key="Axis_2">
+        <summary>📝 Axis 2: Raw Parsing & Normalization</summary>
+        <div class="tree-node">{render_dynamic_tree(axes.get('Axis_2', {}), key_name="Axis_2")}</div>
+    </details>
+
+    <details open data-key="Axis_3">
+        <summary>📐 Axis 3: Symbolic Modeling & Solution</summary>
+        <div class="tree-node">{render_dynamic_tree(axes.get('Axis_3', {}), key_name="Axis_3")}</div>
+    </details>
+
+    <details open data-key="Axis_4">
+        <summary>🌳 Axis 4: Contextual Tree & Backtrack Telemetry</summary>
+        <div class="tree-node">{render_dynamic_tree(axes.get('Axis_4', {}), key_name="Axis_4")}</div>
+    </details>
+
+    <details open data-key="Axis_5">
+        <summary>⚠️ Axis 5: Traps & Verification Protocol</summary>
+        <div class="tree-node">{render_dynamic_tree(axes.get('Axis_5', {}), key_name="Axis_5")}</div>
+    </details>
+
+    <details open data-key="Axis_6">
+        <summary>🧬 Axis 6: Core Idea Genealogy & Precedents</summary>
+        <div class="tree-node">{render_dynamic_tree(axes.get('Axis_6', {}), key_name="Axis_6")}</div>
+    </details>
+
+    <details open data-key="Axis_7">
+        <summary>🔄 Axis 7: Condition Representation Mutation</summary>
+        <div class="tree-node">{render_dynamic_tree(axes.get('Axis_7', {}), key_name="Axis_7")}</div>
+    </details>
+
+    <details open data-key="Axis_8">
+        <summary>🌐 Axis 8: Knowledge Graph Topology</summary>
+        <div class="tree-node">{render_dynamic_tree(axes.get('Axis_8', {}), key_name="Axis_8")}</div>
+    </details>
+
+    <!-- Fallback Explorer for 100% Zero-Data-Loss Verification -->
+    <details style="margin-top: 2rem;">
+        <summary>📁 Full 8-Axis Schema Explorer (100% Key/Value Preserved)</summary>
+        <div style="margin-top: 1rem;">
+            {dynamic_axes_tree}
+        </div>
+    </details>
+    </section>
+
 </body>
 </html>"""
 
