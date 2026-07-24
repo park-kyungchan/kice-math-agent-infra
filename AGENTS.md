@@ -2,7 +2,7 @@
 
 > **Deposit Metadata**  
 > - **Deposit Timestamp**: 2026-07-24  
-> - **Infrastructure Version**: `v2.7.0` (3-Layer Taxonomy Architecture, 7 Closed Lineage Relation Enums & Provisional Status Matrix)  
+> - **Infrastructure Version**: `v2.8.1` (3-Layer Taxonomy, Review State Machine, Claim Provenance — dynamic state: `PROJECT_STATE.json`)  
 > - **Target Repository**: [kice-math-agent-infra](https://github.com/park-kyungchan/kice-math-agent-infra.git)  
 > - **Workspace Path**: `C:\Users\packr\Claude\kice-math-agent-infra`  
 > - **Compatibility**: 100% Agent-Agnostic (Claude Code, OpenAI Codex, Antigravity/AGY, Gemini, Cursor, etc.)
@@ -14,7 +14,7 @@
 - **OS / Shell**: Windows 11 / PowerShell
 - **Database Engine**: SQLite 3 (`storage/parsed_dataset.db` with 8 Flat Columns & persistent indexing across 3 Layers)
 - **Python Runtime**: Python 3.10+ (`pipeline/query_engine/selective_fetcher.py`)
-- **Automated Test Suite**: Unit Tests in `tests/` (100.0% PASS, <0.01ms Batch SLA)
+- **Automated Test Suite**: Unit Tests in `tests/` (SLA definitions: `docs/STAKEHOLDER_INTENT.md` §2.6; cold DB batch < 10ms p95, warm cache < 0.1ms p95)
 - **GitHub Synchronization**:
   - Account: `park-kyungchan`
   - Repository: `https://github.com/park-kyungchan/kice-math-agent-infra.git`
@@ -91,7 +91,7 @@ from pipeline.query_engine.selective_fetcher import QuestionFetcher
 
 fetcher = QuestionFetcher()
 
-# 1. Single Item 8-Axis Fetch (< 0.01ms)
+# 1. Single Item 8-Axis Fetch (warm-cache path; SLA table: docs/STAKEHOLDER_INTENT.md §2.6)
 item = fetcher.get_question('202411_MATH_DIF_22', axes=['Axis_1', 'Axis_3', 'Axis_4'])
 print("Item ID:", item['item_id'], "Score:", item['score'], "Answer:", item['answer'])
 print("Fetched Axes:", list(item['axes'].keys()))
@@ -116,9 +116,13 @@ To prevent multi-turn delays, token waste, and encoding errors:
 1. **STRICTLY PROHIBITED**: Never execute inline shell commands (`python -c "..."`) with nested quotes or SQL strings in Windows PowerShell. This leads to quote escaping crashes (`SyntaxError`), CP949 encoding errors, user approval prompts, and token waste.
 2. **MANDATORY CLI TOOL**: Always use the standardized CLI fetcher `pipeline/query_engine/fetch_cli.py`:
    ```powershell
-   # Instant 1-line item query without quote escaping (0.005ms SLA)
+   # Instant 1-line item query without quote escaping (SLA: docs/STAKEHOLDER_INTENT.md §2.6)
    python pipeline/query_engine/fetch_cli.py --item 202606_MATH_DIF_15 --summary
    python pipeline/query_engine/fetch_cli.py --exam 202606 --number 15
+   # Teacher review governance (state-machine enforced; non-zero exit on illegal transition)
+   python pipeline/query_engine/fetch_cli.py --review-queue
+   python pipeline/query_engine/fetch_cli.py --review-assign --item 202606_MATH_DIF_15 --reviewer t-kim
+   python pipeline/query_engine/fetch_cli.py --review-approve --item 202606_MATH_DIF_15 --reviewer t-kim
    ```
 3. **ZERO TOKEN WASTE**: Rely on `fetch_cli.py` or script imports. Do NOT attempt raw shell DB exploration.
 

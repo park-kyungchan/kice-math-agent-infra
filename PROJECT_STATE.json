@@ -4,7 +4,13 @@
   "lineage_status": "PROVISIONAL",
   "quality_plane_contract": "IMPLEMENTED",
   "independent_execution_proof": "PARTIAL",
-  "teacher_governance_loop": "ACTIVE",
+  "teacher_governance_loop": "IMPLEMENTED_LOCAL_VERIFIED",
+  "claim_provenance": "IMPLEMENTED_LOCAL_VERIFIED",
+  "ci_status": "WORKFLOW_COMMITTED_AWAITING_REMOTE_RUN",
   "overall_status": "PROOF_PHASE_ACTIVE",
-  "version": "v2.8.0"
+  "version": "v2.8.1",
+  "_semantics": {
+    "IMPLEMENTED_LOCAL_VERIFIED": "State machine / provenance enforced in code with local test evidence; ACTIVE requires the Acceptance Gate (green remote CI on a PR + SSoT consistency validator) to pass.",
+    "authority": "This file is the single source of truth for dynamic project state; MANIFEST.json must reference, never duplicate, it."
+  }
 }

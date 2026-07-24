@@ -9,3 +9,7 @@ storage/*_backup_*.db
 *.db-journal
 *.db-wal
 *.db-shm
+
+# superseded unverifiable log (see scripts/run_local_tests.py)
+storage/logs/ci_test_run.json
+storage/_to_delete/

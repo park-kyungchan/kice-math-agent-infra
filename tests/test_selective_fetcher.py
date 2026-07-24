@@ -20,12 +20,16 @@ class TestSelectiveFetcher(unittest.TestCase):
         self.assertIn('axes', res)
         self.assertIn('review_status', res)
         self.assertIn('reviewer_id', res)
+        self.assertIn('review_version', res)
         self.assertIn('review_history_json', res)
-        
+
+        # v2.8.1 invariant (P0-4): provenance is NEVER synthesized at read
+        # time. An axis dict only carries 'provenance' when real rows exist
+        # in the claim_provenance table for that item+axis.
         axis_3 = res['axes'].get('Axis_3', {})
-        if isinstance(axis_3, dict):
-            self.assertIn('provenance', axis_3)
-            self.assertIsInstance(axis_3['provenance'], list)
+        if isinstance(axis_3, dict) and 'provenance' in axis_3:
+            self.assertGreater(len(axis_3['provenance']), 0,
+                               "empty provenance must not be fabricated")
 
     def test_selective_axes_filter(self):
         res = self.fetcher.get_question('202411_MATH_DIF_22', axes=['Axis_1', 'Axis_2'])

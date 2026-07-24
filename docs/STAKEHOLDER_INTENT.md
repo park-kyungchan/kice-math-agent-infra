@@ -64,6 +64,15 @@ This document defines the core intents, pain points, expected workflows, and rev
 * **Report:** Output strictly formatted JSON or markdown reports based on retrieved DB axes.
 
 ### 2.6 Review Criteria
-* <0.01ms batch fetching SLA via native tools.
+* Performance SLA (single definition — all other docs reference this table):
+
+| Operation | p95 target | Measurement condition |
+|---|---|---|
+| Cold DB batch fetch (6 items) | < 10 ms | fresh connection, no in-process cache |
+| Warm cache batch fetch (6 items) | < 0.1 ms | in-process cache hit after warm-up |
+| Review queue scan (1,350 items) | < 500 ms | persisted `review_status` index query |
+| Lineage traversal (depth 3) | < 100 ms | recursive precedent walk |
+
 * Adherence to zero-context anti-pattern rules (e.g., no inline shell scripts).
 * Strict compliance with the 7 closed lineage relation enums.
+* Review workflow actions go through the state machine CLI; illegal transitions must fail with a non-zero exit code and zero DB writes.
