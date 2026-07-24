@@ -2,7 +2,7 @@
 
 > **Deposit Metadata**  
 > - **Deposit Timestamp**: 2026-07-24  
-> - **Infrastructure Version**: `v2.6.0` (3-Layer Taxonomy Architecture & Math Instructors Persona, 4-Tier Automated Eval Harness)
+> - **Infrastructure Version**: `v2.7.0` (3-Layer Taxonomy Architecture, 7 Closed Lineage Relation Enums & Provisional Status Matrix)  
 > - **Target Repository**: [kice-math-agent-infra](https://github.com/park-kyungchan/kice-math-agent-infra.git)  
 > - **Workspace Path**: `C:\Users\packr\Claude\kice-math-agent-infra`  
 > - **Compatibility**: 100% Agent-Agnostic (Claude Code, OpenAI Codex, Antigravity/AGY, Gemini, Cursor, etc.)
@@ -14,7 +14,7 @@
 - **OS / Shell**: Windows 11 / PowerShell
 - **Database Engine**: SQLite 3 (`storage/parsed_dataset.db` with 8 Flat Columns & persistent indexing across 3 Layers)
 - **Python Runtime**: Python 3.10+ (`pipeline/query_engine/selective_fetcher.py`)
-- **Automated Test Suite**: 17 Unit Tests in `tests/` (100.0% PASS, 0.004ms Batch SLA)
+- **Automated Test Suite**: Unit Tests in `tests/` (100.0% PASS, <0.01ms Batch SLA)
 - **GitHub Synchronization**:
   - Account: `park-kyungchan`
   - Repository: `https://github.com/park-kyungchan/kice-math-agent-infra.git`
@@ -42,12 +42,33 @@ Any AI Agent or Math Instructor initiating a session should refer to the followi
 | :--- | :--- | :--- | :--- | :--- |
 | **Layer 1: Pre-processing & Data Infrastructure** | **Axis 1** | `axis1_curriculum` | Curriculum & Construct | 2022 achievement standards, primary/secondary units, cross-unit coupling matrix, prerequisite concept graph. |
 | | **Axis 2** | `axis2_raw_parsing` | Literal Parsing & Normalization | KaTeX AMS-Math normalized syntax, 1:1 raw Korean condition extraction, target expression isolation. |
-| **Layer 2: Item Mathematical Reasoning** | **Axis 3** | `axis3_symbolic_modeling` | Symbolic Modeling & Concept Map | Concept map matching, standard vs. shortcut solutions with explicit `shortcut_prerequisites` & `shortcut_traps`. |
+| **Layer 2: Item Mathematical Reasoning** | **Axis 3** | `axis3_symbolic_modeling` | Symbolic Modeling & Concept Map | Concept map matching, standard vs. shortcut solutions with explicit `standard_solution`, `shortcut_solution`, `shortcut_prerequisites`, & `shortcut_traps`. |
 | | **Axis 4** | `axis4_contextual_tree` | All-Domain Contextual Interpretation | All 5 CSAT domains dynamic interpretation tree & Scratchpad `backtrack_log`. |
 | | **Axis 5** | `axis5_traps_verification` | Distractor Matrix & Verification | 16 student error codes, empirical vs. simulated tagging (`is_simulated_hypothesis`), QA flags (`review_required`), and `confidence_score`. |
-| **Layer 3: Corpus Lineage & Knowledge Index** | **Axis 6** | `axis6_genealogy` | Core Idea Genealogy & Deep-Dive | 10-year mathematical gene codes (`GENE_ABS_DIFF_SMOOTH`), precedent linking via **`precedent_item_id` foreign keys**. |
+| **Layer 3: Corpus Lineage & Knowledge Index** | **Axis 6** | `axis6_genealogy` | Core Idea Genealogy & Deep-Dive | 10-year mathematical gene codes (`GENE_ABS_INTEGRAL_SIGN_CHANGE`), precedent linking via `precedent_item_id` foreign keys, and 7 closed lineage relation enums. |
 | | **Axis 7** | `axis7_mutation` | Condition Representation Mutation | 10-year evolutionary chain of textual phrasing and symbolic representation shifts. |
 | | **Axis 8** | `axis8_knowledge_graph` | Knowledge Graph Topology | 1,350-item graph node/edge topology, degree centrality, and cluster IDs. |
+
+### 3.1 v2.7.0 Closed Lineage Relation Enums (Axis 6)
+
+Under v2.7.0, all historical precedent linkages must use one of 7 closed relation enums and specify whether parentage is allowed (`genealogy_parent_allowed`):
+
+1. **`DIRECT_GENEALOGY`**: Direct historical mathematical ancestor (`genealogy_parent_allowed: true`).
+2. **`PROVISIONAL`**: Candidate historical parent pending empirical verification (`genealogy_parent_allowed: true`).
+3. **`MUTATION_TRANSFORM`**: Direct symbolic/phrasing mutation precedent (`genealogy_parent_allowed: true`).
+4. **`CONCEPT_PREREQUISITE`**: Foundational mathematical prerequisite (`genealogy_parent_allowed: true`).
+5. **`PARAMETER_SHIFT_ANALOGY`**: Domain shift or vertical parameter shift analogy (`genealogy_parent_allowed: false`).
+6. **`STRUCTURAL_ANALOGY`**: High-level structural similarity without direct gene lineage (`genealogy_parent_allowed: false`).
+7. **`REJECTED_RELATION`**: Audited and disproven precedent relationship (`genealogy_parent_allowed: false`).
+
+### 3.2 Provisional Status Matrix (`202606_MATH_DIF_15` Benchmark Set)
+
+| Item ID | Exam / Number | Lineage Relation Enum | Genealogy Parent Allowed | Status |
+| :--- | :---: | :--- | :---: | :---: |
+| **`202606_MATH_DIF_15`** | 202606 Mock #15 | **ANCHOR_QUESTION** | N/A | **VERIFIED_ANCHOR** |
+| **`202106_MATH_DIF_22`** | 202106 Mock #22 | **`PROVISIONAL`** | **`true`** | **PROVISIONAL** |
+| **`202411_MATH_DIF_22`** | 202411 CSAT #22 | **`REJECTED_RELATION`** | **`false`** | **REJECTED** |
+| **`202506_MATH_DIF_22`** | 202506 Mock #22 | **`PARAMETER_SHIFT_ANALOGY`** | **`false`** | **ANALOGY_ONLY** |
 
 ---
 
@@ -109,4 +130,3 @@ python -m unittest discover -s tests -p "test_*.py"
 git status
 gh auth status
 ```
-

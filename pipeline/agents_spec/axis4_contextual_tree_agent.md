@@ -54,11 +54,13 @@ Your role is to construct dynamic interpretation tree branches across all 5 CSAT
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["shortcut_code", "rule_name", "shortcut_formula"],
+        "required": ["shortcut_code", "rule_name", "shortcut_formula", "shortcut_prerequisites", "shortcut_traps"],
         "properties": {
           "shortcut_code": { "type": "string" },
           "rule_name": { "type": "string" },
-          "shortcut_formula": { "type": "string" }
+          "shortcut_formula": { "type": "string" },
+          "shortcut_prerequisites": { "type": "array", "items": { "type": "string" } },
+          "shortcut_traps": { "type": "array", "items": { "type": "string" } }
         }
       }
     },

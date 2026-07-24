@@ -1,6 +1,6 @@
 # CSAT Mathematics Multi-Dimensional Analysis Architecture Specification (Taxonomy_Spec.md)
 
-This specification defines the **3-Layer 8-Axis Taxonomy Schema** and 4-Tier SQLite Database DDL for zero-context agent reasoning and **Math Instructors** across **1,350 CSAT/KICE Mathematics questions (2015–2026)** (v2.6.0).
+This specification defines the **3-Layer 8-Axis Taxonomy Schema** and 4-Tier SQLite Database DDL for zero-context agent reasoning and **Math Instructors** across **1,350 CSAT/KICE Mathematics questions (2015–2026)** (v2.7.0).
 
 ---
 
@@ -38,8 +38,10 @@ graph TD
 
 #### [Axis 3] Symbolic Modeling & Concept Map Matching (`axis3_symbolic_modeling`)
 - **Concept Map Integration**: Matches LaTeX expressions to `storage/kice_math_concept_map.json`.
-- **Standard vs. Shortcut Solutions**: Distinguishes standard textbook solutions from instructor shortcut methods (e.g., polynomial ratio rules, area formulas).
+- **Standard vs. Shortcut Solutions**: Distinguishes standard textbook solutions (`standard_solution`) from instructor shortcut methods (`shortcut_solution`).
 - **Prerequisite & Failure Rules**: Includes explicit schema fields:
+  - `standard_solution`: Standard textbook steps and solution walkthrough.
+  - `shortcut_solution`: Method name and heuristic shortcut formula.
   - `shortcut_prerequisites`: List of mathematical preconditions required before a shortcut method can be validly applied.
   - `shortcut_traps`: Specific boundary cases or counter-conditions where using the shortcut yields incorrect results.
 
@@ -60,6 +62,14 @@ graph TD
 
 #### [Axis 6] 10-Year Core Mathematical Idea Genealogy (`axis6_genealogy`)
 - **Deep-Dive Item Routing**: Stores precedents using exact database foreign keys (`precedent_item_id`).
+- **7 Closed Lineage Relation Enums**:
+  1. `DIRECT_GENEALOGY` (`genealogy_parent_allowed: true`)
+  2. `PROVISIONAL` (`genealogy_parent_allowed: true`)
+  3. `MUTATION_TRANSFORM` (`genealogy_parent_allowed: true`)
+  4. `CONCEPT_PREREQUISITE` (`genealogy_parent_allowed: true`)
+  5. `PARAMETER_SHIFT_ANALOGY` (`genealogy_parent_allowed: false`)
+  6. `STRUCTURAL_ANALOGY` (`genealogy_parent_allowed: false`)
+  7. `REJECTED_RELATION` (`genealogy_parent_allowed: false`)
 
 #### [Axis 7] Condition Representation Mutation Chain (`axis7_mutation`)
 - **Evolutionary Tracking**: Tracks historical shifts in textual phrasing and symbolic notation.

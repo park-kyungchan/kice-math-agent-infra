@@ -15,11 +15,21 @@ LAYER_MAPPING = {
     '3': ['Axis_6', 'Axis_7', 'Axis_8'],
 }
 
+from pipeline.query_engine.quality_plane_judges import QualityPlaneEvaluator, QualityPlaneResult
+
 def _is_item_unverified(item: Dict[str, Any]) -> bool:
+    """
+    Evaluates whether an item is unverified by checking multi-axis flags and Quality Plane judges:
+    - Axis_3 / Axis_5 review_required or confidence_score < 0.85
+    - Lineage relation validity (Axis_6 7 closed relation enums and genealogy_parent_allowed rule)
+    - Distractor Replay Veto status (Axis_5 option verification)
+    - Quality Plane Evaluator overall Veto gate status
+    """
     axes = item.get('axes', {})
     if not isinstance(axes, dict):
-        return False
+        return True
 
+    # 1. Direct Axis_3 / Axis_5 review_required & confidence checks
     for ax_name in ('Axis_3', 'Axis_5'):
         ax_data = axes.get(ax_name)
         if isinstance(ax_data, str):
@@ -42,7 +52,14 @@ def _is_item_unverified(item: Dict[str, Any]) -> bool:
             except (ValueError, TypeError):
                 pass
 
+    # 2. Quality Plane Evaluator multi-axis Veto and confidence check
+    evaluator = QualityPlaneEvaluator()
+    qp_result = evaluator.evaluate(item)
+    if qp_result.is_vetoed or qp_result.status != "VERIFIED":
+        return True
+
     return False
+
 
 class QuestionFetcher:
     def __init__(self, db_path: Optional[str] = None, 
@@ -273,10 +290,16 @@ class QuestionFetcher:
             return []
         return self.get_by_keyword(matched_concept.get("concept_name_english", ""), layer=layer, axes=axes)
 
+    def evaluate_quality_plane(self, item_id: str, context: Optional[Dict[str, Any]] = None) -> QualityPlaneResult:
+        item = self.get_question(item_id)
+        evaluator = QualityPlaneEvaluator()
+        return evaluator.evaluate(item, context=context)
+
     def clear_cache(self) -> None:
         self._question_cache.clear()
         self._routing_index_cache = None
         self._concept_map_cache = None
+
 
 if __name__ == '__main__':
     fetcher = QuestionFetcher()

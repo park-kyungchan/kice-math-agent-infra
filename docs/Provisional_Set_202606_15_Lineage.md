@@ -1,28 +1,29 @@
-# 202606_MATH_DIF_15 Pilot Lineage Benchmark Specification
+# 202606_MATH_DIF_15 Pilot Provisional Lineage Benchmark Specification
 
-> **Document Version**: `v1.0.0`  
+> **Document Version**: `v2.7.0 (Provisional Reclassification)`  
 > **Target Domain**: 2027 CSAT / KICE Mathematics (Calculus / Polynomial Differentiation & Integration)  
 > **Anchor Question**: `202606_MATH_DIF_15`  
 > **Database Status**: Verified 4/4 Items Present in `storage/parsed_dataset.db` with valid 8-Axis Schema  
+> **Lineage Evaluation Status**: `PROVISIONAL` Matrix Active (v2.7.0)
 
 ---
 
 ## Executive Summary
 
-This document specifies the **Initial Gold Benchmark Set** anchored by item `202606_MATH_DIF_15` (2026 June Mock Exam, Mathematics DIF Track, Question #15). It details the 3-Layer Analysis (Data Layer, Problem-Solving Dynamics Layer, and Graph/Lineage Topology Layer) for the anchor question and its 3 core historical precedents (`202106_MATH_DIF_22`, `202411_MATH_DIF_22`, and `202506_MATH_DIF_22`).
+This document specifies the **Provisional Benchmark Set** anchored by item `202606_MATH_DIF_15` (2026 June Mock Exam, Mathematics DIF Track, Question #15). Under the v2.7.0 Lineage Reclassification Protocol, candidate historical precedents have been audited against the 7 Closed Lineage Relation Enums. Candidate precedents are evaluated for true mathematical parentage (`genealogy_parent_allowed: true`) versus non-parent analogies or rejected relations (`genealogy_parent_allowed: false`).
 
 ---
 
-## 1. Database Verification Log
+## 1. Database Verification & Provisional Status Matrix
 
-All four benchmark items have been empirically verified in `storage/parsed_dataset.db`:
+All four benchmark items are verified in `storage/parsed_dataset.db` and classified under the v2.7.0 Provisional Status Matrix:
 
-| Item ID | Exam | Number | Score | Type / Answer | Axis Schema Status |
-| :--- | :--- | :---: | :---: | :---: | :---: |
-| **`202606_MATH_DIF_15`** | 202606 Mock | 15 | 4 | Choice (4 / 27) | **Verified (8-Axis Complete)** |
-| **`202106_MATH_DIF_22`** | 202106 Mock | 22 | 4 | Subjective | **Verified (Axis 1~6 Valid)** |
-| **`202411_MATH_DIF_22`** | 202411 CSAT | 22 | 4 | Subjective | **Verified (Axis 1~6 Valid)** |
-| **`202506_MATH_DIF_22`** | 202506 Mock | 22 | 4 | Subjective | **Verified (Axis 1~6 Valid)** |
+| Item ID | Exam | Number | Score | Lineage Relation Enum | Genealogy Parent Allowed | Status |
+| :--- | :--- | :---: | :---: | :--- | :---: | :---: |
+| **`202606_MATH_DIF_15`** | 202606 Mock | 15 | 4 | **ANCHOR_QUESTION** | N/A (Anchor) | **VERIFIED_ANCHOR** |
+| **`202106_MATH_DIF_22`** | 202106 Mock | 22 | 4 | **`PROVISIONAL`** | **`true`** | **PROVISIONAL** |
+| **`202411_MATH_DIF_22`** | 202411 CSAT | 22 | 4 | **`REJECTED_RELATION`** | **`false`** | **REJECTED** |
+| **`202506_MATH_DIF_22`** | 202506 Mock | 22 | 4 | **`PARAMETER_SHIFT_ANALOGY`** | **`false`** | **ANALOGY_ONLY** |
 
 ---
 
@@ -71,27 +72,27 @@ All four benchmark items have been empirically verified in `storage/parsed_datas
 - **Master 8-Axis Routing**:
   - `axis1_curriculum`: Calculus II - Polynomial Integration & Extreme Values
   - `axis3_symbolic_modeling`: `POLY_DEG3_INTEGRAL_ABS_SIGN_CHANGE`
-  - `axis6_genealogy`: Linked to `202106_MATH_DIF_22`, `202411_MATH_DIF_22`, `202506_MATH_DIF_22`
+  - `axis6_genealogy`: Linked to `202106_MATH_DIF_22` (`PROVISIONAL`, parent allowed)
   - `axis8_knowledge_graph`: Degree Centrality `0.89` in `CLUSTER_CALCULUS_INTEGRAL_ABS`
 
 ---
 
-## 3. Historical Precedent Lineage Analysis
+## 3. Historical Candidate Precedent Analysis & Reclassification
 
 ```mermaid
 graph TD
-    A["202106_MATH_DIF_22<br/>(Absolute Integral Sign Change & Root Bounds)"] -->|Phrasing Mutation| D["202606_MATH_DIF_15<br/>(Anchor Question)"]
-    B["202411_MATH_DIF_22<br/>(Cubic 2:1 Ratio & Extrema Location)"] -->|Structural Ratio Link| D
-    C["202506_MATH_DIF_22<br/>(Vertical Translation f(x)+q & Axis-Crossing)"] -->|Translation Parameter Shift| D
+    A["202106_MATH_DIF_22<br/>(PROVISIONAL Parent)<br/>Composite Root Bounds"] -->|Provisional Gene Link| D["202606_MATH_DIF_15<br/>(Anchor Question)"]
+    B["202411_MATH_DIF_22<br/>(REJECTED_RELATION)<br/>Discrete Recurrence Parity"] -.->|Disproven Parentage| D
+    C["202506_MATH_DIF_22<br/>(PARAMETER_SHIFT_ANALOGY)<br/>Exponential Shift & Area"] -.->|Analogy Only| D
 ```
 
 ---
 
-### 3.1 Precedent 1: `202106_MATH_DIF_22`
+### 3.1 Candidate 1: `202106_MATH_DIF_22` (Status: `PROVISIONAL`, `genealogy_parent_allowed: true`)
 
 #### Layer 1: Data & Mathematical Spec
 - **Exam / Item**: 2021 June Mock Exam, DIF #22 (4 Points)
-- **Core Concept**: Absolute values, integral inequalities, and composite root bounds.
+- **Core Concept**: Polynomial root multiplicity, functional composition, and composite root bounds.
 - **Problem Statement**:
   - Cubic polynomial $f(x)$ satisfies:
     1. $f(x) = 0$ has 2 distinct real roots.
@@ -103,16 +104,18 @@ graph TD
 - **Shortcut**: Using tangent condition at extrema to bound the number of composite solutions.
 - **Traps**: `DIST_CASE_MISS` — missing tangency boundary conditions when determining root branches.
 
-#### Layer 3: Lineage Link to `202606_MATH_DIF_15`
-- **Lineage Connection**: Provides the foundational mathematical paradigm for using sign changes and integral inequality bounds ($\int |f| \neq |\int f|$) to deduce exact root positions and tangency conditions.
+#### Layer 3: Lineage Link & Reclassification
+- **Lineage Relation**: `PROVISIONAL`
+- **Genealogy Parent Allowed**: `true`
+- **Lineage Connection**: Provides the foundational mathematical paradigm for root multiplicity analysis under composite function conditions to deduce exact root positions and tangency conditions. (Note: Removed legacy text regarding integral absolute value inequalities).
 
 ---
 
-### 3.2 Precedent 2: `202411_MATH_DIF_22`
+### 3.2 Candidate 2: `202411_MATH_DIF_22` (Status: `REJECTED_RELATION`, `genealogy_parent_allowed: false`)
 
 #### Layer 1: Data & Mathematical Spec
 - **Exam / Item**: 2024 CSAT (November), DIF #22 (4 Points)
-- **Core Concept**: Cubic polynomial ratio relations, extrema placement, and discrete value bounds.
+- **Core Concept**: Discrete sequence modular parity recurrence and initial term bounds.
 - **Problem Statement**:
   - Sequence $a_n$ of integers satisfying piecewise parity recurrence and extremum condition $|a_m| = |a_{m+2}|$ with minimum $m=3$. Find sum of $|a_1|$.
 
@@ -121,60 +124,66 @@ graph TD
 - **Shortcut**: Parity invariance modular arithmetic narrowing down possible starting branches.
 - **Traps**: `DIST_CASE_MISS` — failing to check negative initial values or early termination branches.
 
-#### Layer 3: Lineage Link to `202606_MATH_DIF_15`
-- **Lineage Connection**: Directly establishes the 2:1 ratio structural property and extrema position modeling that allows rapid determination of the local minimum $x=2$ in $f(x) = a x^2 (x-3)$.
+#### Layer 3: Lineage Link & Reclassification
+- **Lineage Relation**: `REJECTED_RELATION`
+- **Genealogy Parent Allowed**: `false`
+- **Reclassification Rationale**: `202411_MATH_DIF_22` is a discrete integer sequence recurrence question. It lacks any differential or integral calculus sign-change dynamics. Under v2.7.0 lineage schema rules, it cannot serve as a valid genealogy parent for `202606_MATH_DIF_15`.
 
 ---
 
-### 3.3 Precedent 3: `202506_MATH_DIF_22`
+### 3.3 Candidate 3: `202506_MATH_DIF_22` (Status: `PARAMETER_SHIFT_ANALOGY`, `genealogy_parent_allowed: false`)
 
 #### Layer 1: Data & Mathematical Spec
 - **Exam / Item**: 2025 June Mock Exam, DIF #22 (4 Points)
-- **Core Concept**: Vertical translation $f(x)+q$ and axis-crossing count evolution.
+- **Core Concept**: Exponential function vertical translation $f(x)+k$ and coordinate geometry triangle area.
 - **Problem Statement**:
   - Exponential curves with parameter $k > 1$: $y = 2^{x+1/2} + k$ and $y = k \cdot (1/2)^x + k - 2$ intersect at $A$. Line through $A$ with slope $-1$ meets $y = 2^{x-2}-3$ at $B$. Triangle $AOB$ area equals 16. Find $k + \log_2 k$.
 
 #### Layer 2: Problem-Solving & Trap Matrix
-- **Dynamics**: Evaluates geometric and algebraic behavior under vertical shifts ($+k$ or $+q$) and tracks intersection count transitions.
+- **Dynamics**: Evaluates geometric and algebraic behavior under vertical shifts ($+k$) and tracks intersection count transitions.
 - **Shortcut**: Axis symmetry under slope $-1$ translation.
 - **Traps**: Parameter scaling and shift orientation errors.
 
-#### Layer 3: Lineage Link to `202606_MATH_DIF_15`
-- **Lineage Connection**: Directly inspires **Condition (나)** $\int_{0}^{3} |f(x)+q| dx \neq \left| \int_{0}^{3} (f(x)+q) dx \right|$ for $0 < q < 1$, where vertical parameter shift $+q$ alters the axis-crossing behavior of the function on a fixed interval $[0, 3]$.
+#### Layer 3: Lineage Link & Reclassification
+- **Lineage Relation**: `PARAMETER_SHIFT_ANALOGY`
+- **Genealogy Parent Allowed**: `false`
+- **Reclassification Rationale**: While `202506_MATH_DIF_22` shares the high-level concept of a parameter shift ($+k$ vs $+q$), its underlying domain is exponential functions and coordinate geometry. It is categorized as a non-genealogy parameter shift analogy rather than a direct mathematical ancestor.
 
 ---
 
-## 4. Benchmark Lineage Synthesis Matrix
+## 4. Provisional Lineage Synthesis Matrix (v2.7.0)
 
 | Axis ID | `202106_MATH_DIF_22` | `202411_MATH_DIF_22` | `202506_MATH_DIF_22` | `202606_MATH_DIF_15` (Anchor) |
 | :--- | :--- | :--- | :--- | :--- |
+| **Lineage Relation Enum** | `PROVISIONAL` | `REJECTED_RELATION` | `PARAMETER_SHIFT_ANALOGY` | `ANCHOR_QUESTION` |
+| **Genealogy Parent Allowed**| **`true`** | **`false`** | **`false`** | **N/A** |
 | **Axis 1 (Curriculum)** | Polynomial Roots / Comp | Discrete / Recurrence | Exponential / Shift | Polynomial Diff & Int |
 | **Axis 2 (Parsing)** | $f(x-f(x))=0$ | $|a_m|=|a_{m+2}|$ | Area($\Delta AOB$)=16 | $\int|f|\neq|\int f|$, $\int|f+q|\neq|\int(f+q)|$ |
 | **Axis 3 (Model)** | Tangency Root Count | Modular Parity | Slope $-1$ Symmetry | $f(x) = a x^2 (x-3)$, $f(2) = -1$ |
 | **Axis 4 (Tree)** | Double Root Cases | Backtrack Tree | Coordinate System | Root Position & Min Cases |
 | **Axis 5 (Traps)** | `DIST_CASE_MISS` | `DIST_CASE_MISS` | Calculation Error | `DIST_CASE_SIGN`, `DIST_INTEGRAL_BOUND` |
-| **Axis 6 (Genealogy)**| `GENE_ABS_DIFF` | `GENE_RATIO_EXTREMA`| `GENE_VERT_SHIFT` | `GENE_ABS_INTEGRAL_SIGN_CHANGE` |
-| **Axis 7 (Mutation)** | Original Composite | Discrete Mutated | Geometric Shift | Unified Definite Integral Sign Change |
-| **Axis 8 (Graph)** | Cluster Node | Cluster Node | Cluster Node | Central Hub Node (Centrality 0.89) |
+| **Axis 6 (Genealogy)**| `GENE_ABS_DIFF` | N/A (Rejected) | N/A (Analogy) | `GENE_ABS_INTEGRAL_SIGN_CHANGE` |
+| **Axis 7 (Mutation)** | Original Composite | Non-calculus Disproven| Parameter Analogy | Unified Definite Integral Sign Change |
+| **Axis 8 (Graph)** | Cluster Node | Independent Node | Analogy Edge Node | Central Hub Node (Centrality 0.89) |
 
 ---
 
 ## 5. Verification Command & SLA
 
-To query this Gold Set programmatically via Python:
+To query this Provisional Set programmatically via Python:
 
 ```python
 from pipeline.query_engine.selective_fetcher import QuestionFetcher
 
 fetcher = QuestionFetcher()
-gold_items = fetcher.get_questions_batch([
+provisional_items = fetcher.get_questions_batch([
     '202606_MATH_DIF_15',
     '202106_MATH_DIF_22',
     '202411_MATH_DIF_22',
     '202506_MATH_DIF_22'
 ])
 
-print(f"Successfully fetched {len(gold_items)} Gold Set items.")
+print(f"Successfully fetched {len(provisional_items)} Provisional Set items.")
 ```
 
 CLI Query:

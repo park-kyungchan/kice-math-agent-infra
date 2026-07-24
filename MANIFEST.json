@@ -1,6 +1,6 @@
 {
   "project_name": "CSAT Mathematics Zero-Context Agent Infra",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "target_domain": "2027 KICE Mock & CSAT Mathematics (Common + Calculus, Geometry, Prob)",
   "target_personas": ["Zero-Context Autonomous AI Agents", "Math Instructors & Curriculum Developers"],
   "architecture": "3-Layer 8-Axis Taxonomy Architecture & Semantic Eval Harness",
@@ -9,7 +9,8 @@
     "total_pdf_papers": 45,
     "total_diagram_png_assets": 1350,
     "db_location": "storage/parsed_dataset.db",
-    "eval_gate_score": "100.0% PASS (3-Layer Taxonomy & Semantic Eval Harness v2.6.0)"
+    "eval_gate_score": "100.0% PASS (3-Layer Taxonomy & Semantic Eval Harness v2.7.0)",
+    "eval_status": "PROVISIONAL Matrix Active (v2.7.0)"
   },
   "context_loading_entrypoints": {
     "order_1_manifest": "ENTRYPOINT.md",
@@ -23,12 +24,12 @@
       "Axis_2_Raw_Parsing (Literal Parsing & KaTeX Normalization)"
     ],
     "layer_2_reasoning": [
-      "Axis_3_Symbolic_Modeling (Symbolic Modeling, Standard vs Shortcut & Prerequisites)",
+      "Axis_3_Symbolic_Modeling (Symbolic Modeling, standard_solution, shortcut_solution, shortcut_prerequisites, shortcut_traps)",
       "Axis_4_Contextual_Tree (All-Domain Contextual Interpretation & Backtrack Tree)",
-      "Axis_5_Traps_Verification (Distractor Traps, Empirical vs Simulated & QA Flags)"
+      "Axis_5_Traps_Verification (Distractor Traps, is_simulated_hypothesis, review_required, confidence_score)"
     ],
     "layer_3_lineage_index": [
-      "Axis_6_Genealogy (10-Year Core Idea Genealogy & Deep-Dive)",
+      "Axis_6_Genealogy (10-Year Core Idea Genealogy & 7 Closed Lineage Enums)",
       "Axis_7_Mutation (Condition Representation Mutation Chain)",
       "Axis_8_Knowledge_Graph (Knowledge Graph Topology & Indexing)"
     ]
@@ -36,10 +37,10 @@
   "taxonomy_axes": [
     "Layer 1 - Axis_1_Curriculum (Curriculum & Construct Integration)",
     "Layer 1 - Axis_2_Raw_Parsing (Literal Parsing & KaTeX Normalization)",
-    "Layer 2 - Axis_3_Symbolic_Modeling (Symbolic Modeling, Standard vs Shortcut Solutions & Prerequisites)",
+    "Layer 2 - Axis_3_Symbolic_Modeling (Symbolic Modeling, standard_solution, shortcut_solution, shortcut_prerequisites, shortcut_traps)",
     "Layer 2 - Axis_4_Contextual_Tree (All-Domain Contextual Interpretation Tree)",
-    "Layer 2 - Axis_5_Traps_Verification (Distractor Traps, Empirical vs Simulated & Verification Flags)",
-    "Layer 3 - Axis_6_Genealogy (10-Year Core Mathematical Idea Genealogy & Deep-Dive)",
+    "Layer 2 - Axis_5_Traps_Verification (Distractor Traps, is_simulated_hypothesis, review_required, confidence_score)",
+    "Layer 3 - Axis_6_Genealogy (10-Year Core Mathematical Idea Genealogy & 7 Closed Lineage Enums)",
     "Layer 3 - Axis_7_Mutation (Condition Representation Mutation Chain)",
     "Layer 3 - Axis_8_Knowledge_Graph (Knowledge Graph Topology & Indexing)"
   ],
