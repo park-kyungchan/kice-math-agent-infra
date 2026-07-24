@@ -316,7 +316,9 @@ class HTMLReportBuilder:
         # Process Asset Image (Base64 Data URI for 100% Guaranteed Browser Rendering)
         img_src = convert_image_to_base64_data_uri(asset_image_url) if asset_image_url else None
         if not img_src and asset_image_url:
-            img_src = f"file:///{asset_image_url.replace('\\', '/')}"
+            # NOTE: backslash kept outside the f-string expression for Python < 3.12 compatibility (PEP 701).
+            _asset_posix = str(asset_image_url).replace("\\", "/")
+            img_src = f"file:///{_asset_posix}"
         has_asset = bool(img_src)
 
         # Dynamic Question Header & Split Layout

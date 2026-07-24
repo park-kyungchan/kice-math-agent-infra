@@ -1,3 +1,11 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# SQLite backups & journals (never commit)
+storage/backups/
+storage/*_backup.db
+storage/*_backup_*.db
+*.db-journal
+*.db-wal
+*.db-shm
