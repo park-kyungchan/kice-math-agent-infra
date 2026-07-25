@@ -154,6 +154,38 @@ def check_transition_matrix(errors):
             )
 
 
+def check_ci_evidence(errors):
+    state = json.loads(_read(PROJECT_STATE))
+    evidence = state.get('ci_evidence', {})
+    if not isinstance(evidence, dict) or not evidence:
+        errors.append('ci_evidence: missing or invalid ci_evidence object in PROJECT_STATE.json')
+        return
+
+    for key in ('workflow', 'run_id', 'tested_head_sha', 'conclusion', 'verified_at'):
+        if key not in evidence:
+            errors.append(f'ci_evidence: missing required key {key!r}')
+
+    conclusion = evidence.get('conclusion')
+    run_id = evidence.get('run_id')
+    sha = evidence.get('tested_head_sha')
+    verified_at = evidence.get('verified_at')
+
+    if conclusion == 'success':
+        if not isinstance(run_id, int) or run_id <= 0:
+            errors.append(f'ci_evidence: conclusion is success but run_id must be > 0, got {run_id!r}')
+        if not isinstance(sha, str) or not re.fullmatch(r'^[0-9a-f]{40}$', sha) or sha == '0' * 40:
+            errors.append(f'ci_evidence: conclusion is success but tested_head_sha must be 40 non-zero hex chars, got {sha!r}')
+        if not isinstance(verified_at, str) or not re.fullmatch(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$', verified_at):
+            errors.append(f'ci_evidence: conclusion is success but verified_at must be RFC 3339 timestamp, got {verified_at!r}')
+        if state.get('ci_status') != 'GOVERNANCE_CI_GREEN':
+            errors.append(f"ci_evidence: conclusion is success but ci_status must be 'GOVERNANCE_CI_GREEN', got {state.get('ci_status')!r}")
+        if state.get('teacher_governance_loop') != 'ACTIVE':
+            errors.append(f"ci_evidence: conclusion is success but teacher_governance_loop must be 'ACTIVE', got {state.get('teacher_governance_loop')!r}")
+    else:
+        if state.get('teacher_governance_loop') == 'ACTIVE':
+            errors.append(f"ci_evidence: non-success conclusion {conclusion!r} cannot permit teacher_governance_loop 'ACTIVE'")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--db', default=DEFAULT_DB)
@@ -164,13 +196,14 @@ def main() -> int:
     check_manifest_vs_state(errors)
     check_versions(errors)
     check_transition_matrix(errors)
+    check_ci_evidence(errors)
 
     if errors:
         print('SSoT CONSISTENCY: FAIL')
         for e in errors:
             print(f'  - {e}')
         return 1
-    print('SSoT CONSISTENCY: OK (DDL, manifest/state, versions, transition matrix)')
+    print('SSoT CONSISTENCY: OK (DDL, manifest/state, versions, transition matrix, ci_evidence)')
     return 0
 
 

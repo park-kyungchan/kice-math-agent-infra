@@ -82,6 +82,10 @@ def build_mini_db(path: str) -> None:
     conn.close()
 
 
+from pipeline.migrate_db_v2_8_4 import migrate as run_migration_v2_8_4
+from pipeline.migrate_db_v2_9_0 import migrate as run_migration_v2_9_0
+
+
 class ReviewStateMachineTestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -89,6 +93,8 @@ class ReviewStateMachineTestBase(unittest.TestCase):
         cls._golden = os.path.join(cls._tmpdir, 'golden.db')
         build_mini_db(cls._golden)
         run_migration(cls._golden, backup=False)
+        run_migration_v2_8_4(cls._golden)
+        run_migration_v2_9_0(cls._golden)
 
     @classmethod
     def tearDownClass(cls):
@@ -356,11 +362,18 @@ class TestActorPolicyAndAtomicity(ReviewStateMachineTestBase):
         import pipeline.query_engine.claim_provenance as cpmod
 
         conn = self.conn()
+        row = conn.execute("SELECT latex_content FROM question_item WHERE item_id='ITEM_FULL'").fetchone()
+        h_exam = cpmod.content_hash(row[0], mode="utf8")
         cpmod.record_claim(
             conn, 'ITEM_FULL', 'Axis_6', '/historical_precedents/0/relation_type',
             'ITEM_X is a direct genealogy parent', 'INFERENCE',
-            source_refs=[{'source_type': 'ORIGINAL_EXAM_TEXT', 'item_id': 'ITEM_X',
-                          'field': 'latex_content'}],
+            source_refs=[{
+                'schema_version': 1,
+                'source_type': 'ORIGINAL_EXAM_TEXT',
+                'item_id': 'ITEM_FULL',
+                'field': 'latex_content',
+                'content_hash': h_exam,
+            }],
             derived_by={'actor_type': 'AGENT', 'actor_id': 'axis6-genealogy-agent', 'model': 'any'},
             confidence_score=0.7,
         )
@@ -394,6 +407,81 @@ class TestActorPolicyAndAtomicity(ReviewStateMachineTestBase):
         self.assertEqual(before_version, after_version, "review_version must not bump on a rolled-back transaction")
         self.assertEqual(before_events, after_events, "no orphaned event row may survive a rolled-back transaction")
         self.assertEqual(after_human_status, 'UNREVIEWED', "provenance must also remain unchanged (same transaction)")
+
+    def test_provenance_import_failure_causes_complete_rollback(self):
+        """v2.8.3: Provenance import failure must raise ReviewStateError and roll back complete transition."""
+        import builtins
+        conn = self.conn()
+        rs.transition(conn, 'ITEM_FULL', 'REVIEW_REQUIRED', actor_id='sys', actor_type='SYSTEM')
+        rs.transition(conn, 'ITEM_FULL', 'TEACHER_ASSIGNED', actor_id='t-kim')
+
+        before_status, before_version = conn.execute(
+            "SELECT review_status, review_version FROM question_item WHERE item_id='ITEM_FULL'"
+        ).fetchone()
+        before_events = len(rs.get_item_events(conn, 'ITEM_FULL'))
+
+        orig_import = builtins.__import__
+        def mock_import(name, globals=None, locals=None, fromlist=(), level=0):
+            if 'claim_provenance' in name:
+                raise ImportError("Simulated claim_provenance import failure")
+            return orig_import(name, globals, locals, fromlist, level)
+
+        with mock.patch('builtins.__import__', side_effect=mock_import):
+            with self.assertRaises(rs.ReviewStateError):
+                rs.transition(conn, 'ITEM_FULL', 'TEACHER_APPROVED', actor_id='t-kim')
+
+        after_status, after_version = conn.execute(
+            "SELECT review_status, review_version FROM question_item WHERE item_id='ITEM_FULL'"
+        ).fetchone()
+        after_events = len(rs.get_item_events(conn, 'ITEM_FULL'))
+
+        self.assertEqual(before_status, after_status)
+        self.assertEqual(before_version, after_version)
+        self.assertEqual(before_events, after_events)
+
+    def test_missing_provenance_table_causes_complete_rollback(self):
+        """v2.8.3: Missing claim_provenance table must raise ProvenanceError and roll back transition."""
+        conn = self.conn()
+        rs.transition(conn, 'ITEM_FULL', 'REVIEW_REQUIRED', actor_id='sys', actor_type='SYSTEM')
+        rs.transition(conn, 'ITEM_FULL', 'TEACHER_ASSIGNED', actor_id='t-kim')
+
+        before_status, before_version = conn.execute(
+            "SELECT review_status, review_version FROM question_item WHERE item_id='ITEM_FULL'"
+        ).fetchone()
+        before_events = len(rs.get_item_events(conn, 'ITEM_FULL'))
+
+        conn.execute("DROP TABLE claim_provenance")
+        conn.commit()
+
+        import pipeline.query_engine.claim_provenance as cpmod
+        with self.assertRaises(cpmod.ProvenanceError):
+            rs.transition(conn, 'ITEM_FULL', 'TEACHER_APPROVED', actor_id='t-kim')
+
+        after_status, after_version = conn.execute(
+            "SELECT review_status, review_version FROM question_item WHERE item_id='ITEM_FULL'"
+        ).fetchone()
+        after_events = len(rs.get_item_events(conn, 'ITEM_FULL'))
+
+        self.assertEqual(before_status, after_status)
+        self.assertEqual(before_version, after_version)
+        self.assertEqual(before_events, after_events)
+
+    def test_present_provenance_table_zero_matching_claims(self):
+        """v2.8.3: Present table with zero matching claims succeeds and updates status."""
+        conn = self.conn()
+        rs.transition(conn, 'ITEM_FULL', 'REVIEW_REQUIRED', actor_id='sys', actor_type='SYSTEM')
+        rs.transition(conn, 'ITEM_FULL', 'TEACHER_ASSIGNED', actor_id='t-kim')
+
+        conn.execute("DELETE FROM claim_provenance WHERE item_id='ITEM_FULL'")
+        conn.commit()
+
+        event = rs.transition(conn, 'ITEM_FULL', 'TEACHER_APPROVED', actor_id='t-kim')
+        self.assertEqual(event['to_status'], 'TEACHER_APPROVED')
+
+        status = conn.execute(
+            "SELECT review_status FROM question_item WHERE item_id='ITEM_FULL'"
+        ).fetchone()[0]
+        self.assertEqual(status, 'TEACHER_APPROVED')
 
     def test_review_event_update_is_rejected(self):
         """P1-1: teacher_review_event rows must be immutable (append-only)."""

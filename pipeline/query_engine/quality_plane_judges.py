@@ -43,6 +43,13 @@ LINEAGE_RELATION_PARENT_ALLOWED_MAP: Dict[str, bool] = {
 }
 
 
+class JudgeExecutionStatus:
+    PASS = "PASS"
+    FAIL = "FAIL"
+    NOT_RUN = "NOT_RUN"
+    ERROR = "ERROR"
+
+
 @dataclass
 class JudgeResult:
     """Result returned by an individual Quality Judge."""
@@ -50,6 +57,7 @@ class JudgeResult:
     passed: bool
     score: float  # 0.0 to 1.0
     is_vetoed: bool
+    execution_status: str = JudgeExecutionStatus.PASS
     reason: Optional[str] = None
     details: Dict[str, Any] = field(default_factory=dict)
 
@@ -59,6 +67,7 @@ class JudgeResult:
             "passed": self.passed,
             "score": self.score,
             "is_vetoed": self.is_vetoed,
+            "execution_status": self.execution_status,
             "reason": self.reason,
             "details": self.details,
         }
@@ -273,7 +282,7 @@ class IndependentSolverJudge:
         name = "IndependentSolverJudge"
         ground_truth = item.get("answer")
 
-        # Gather solved answer candidates
+        # 1. Check if solved_answer is explicitly provided in context, item, Axis_3, or Axis_5
         solved_answer = None
         if context and "solved_answer" in context:
             solved_answer = context["solved_answer"]
@@ -294,6 +303,7 @@ class IndependentSolverJudge:
                     passed=True,
                     score=1.0,
                     is_vetoed=False,
+                    execution_status=JudgeExecutionStatus.PASS,
                     details={"solved_answer": solved_answer, "ground_truth": ground_truth},
                 )
             else:
@@ -302,16 +312,54 @@ class IndependentSolverJudge:
                     passed=False,
                     score=0.0,
                     is_vetoed=True,
+                    execution_status=JudgeExecutionStatus.FAIL,
                     reason=f"Independent solver answer ({solved_answer}) conflicts with ground truth answer ({ground_truth})",
                     details={"solved_answer": solved_answer, "ground_truth": ground_truth},
                 )
 
+        # 2. Dynamic independent solver engine invocation
+        if item.get("latex_content"):
+            from pipeline.query_engine.independent_solver import IndependentSolverEngine
+            solver = IndependentSolverEngine()
+            res = solver.solve_item(item)
+            if res.get("execution_status") == "PASS":
+                return JudgeResult(
+                    judge_name=name,
+                    passed=True,
+                    score=1.0,
+                    is_vetoed=False,
+                    execution_status=JudgeExecutionStatus.PASS,
+                    details=res,
+                )
+            elif res.get("execution_status") == "FAIL":
+                return JudgeResult(
+                    judge_name=name,
+                    passed=False,
+                    score=0.0,
+                    is_vetoed=True,
+                    execution_status=JudgeExecutionStatus.FAIL,
+                    reason=f"Independent solver answer ({res.get('solved_answer')}) conflicts with ground truth ({ground_truth})",
+                    details=res,
+                )
+            elif res.get("execution_status") == "ERROR":
+                return JudgeResult(
+                    judge_name=name,
+                    passed=False,
+                    score=0.0,
+                    is_vetoed=True,
+                    execution_status=JudgeExecutionStatus.ERROR,
+                    reason=res.get("reason", "Solver execution error"),
+                    details=res,
+                )
+
+        # 3. Mandatory fail-closed NOT_RUN status (Codex Review §3, §4.2, Section 7.1)
         return JudgeResult(
             judge_name=name,
-            passed=True,
-            score=0.9,
+            passed=False,
+            score=0.0,
             is_vetoed=False,
-            reason="No independent solver conflict detected",
+            execution_status=JudgeExecutionStatus.NOT_RUN,
+            reason="Independent solver execution was NOT run for this item",
             details={"solved_answer": solved_answer, "ground_truth": ground_truth},
         )
 
@@ -726,10 +774,16 @@ class QualityPlaneEvaluator:
 
         overall_confidence = weighted_score_sum / total_weight if total_weight > 0 else 0.0
 
+        solver_res = judge_results.get("IndependentSolverJudge")
+        solver_passed = solver_res and solver_res.execution_status == JudgeExecutionStatus.PASS
+
         if veto_reasons:
             status = "VETOED"
             is_vetoed = True
-        elif overall_confidence < 0.85:
+        elif not solver_passed:
+            status = "SEMANTIC_PROOF_PENDING"
+            is_vetoed = False
+        elif overall_confidence < 0.90:
             status = "PROVISIONAL"
             is_vetoed = False
         else:

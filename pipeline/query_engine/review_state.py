@@ -30,6 +30,7 @@ REVIEW_STATES = (
     "REVIEW_REQUIRED",
     "TEACHER_ASSIGNED",
     "TEACHER_APPROVED",
+    "SEMANTIC_PROOF_PENDING",
     "REVISION_REQUESTED",
     "TEACHER_REVISED",
     "REJECTED",
@@ -45,13 +46,15 @@ ALLOWED_TRANSITIONS: Dict[str, set] = {
     "TEACHER_ASSIGNED": {"TEACHER_APPROVED", "REVISION_REQUESTED", "REJECTED"},
     "REVISION_REQUESTED": {"TEACHER_REVISED"},
     "TEACHER_REVISED": {"REVIEW_REQUIRED"},
-    "TEACHER_APPROVED": {"VERIFIED", "REVIEW_REQUIRED"},
+    "TEACHER_APPROVED": {"SEMANTIC_PROOF_PENDING", "VERIFIED", "REVIEW_REQUIRED"},
+    "SEMANTIC_PROOF_PENDING": {"VERIFIED", "REVIEW_REQUIRED"},
     "REJECTED": set(),
     "VERIFIED": {"REVIEW_REQUIRED"},
 }
 
 # Queue membership is defined ONLY by persisted state.
 QUEUE_STATES = ("REVIEW_REQUIRED", "TEACHER_ASSIGNED", "REVISION_REQUESTED")
+PROOF_QUEUE_STATES = ("SEMANTIC_PROOF_PENDING",)
 
 ACTOR_TYPES = ("TEACHER", "SYSTEM", "AGENT")
 
@@ -76,8 +79,11 @@ TRANSITION_POLICIES: Dict[Tuple[str, str], Set[str]] = {
     ("TEACHER_ASSIGNED", "REJECTED"): {"TEACHER"},
     ("REVISION_REQUESTED", "TEACHER_REVISED"): {"TEACHER"},
     ("TEACHER_REVISED", "REVIEW_REQUIRED"): {"SYSTEM"},
+    ("TEACHER_APPROVED", "SEMANTIC_PROOF_PENDING"): set(),
     ("TEACHER_APPROVED", "VERIFIED"): set(),          # revalidate_item() only
     ("TEACHER_APPROVED", "REVIEW_REQUIRED"): set(),   # revalidate_item() only
+    ("SEMANTIC_PROOF_PENDING", "VERIFIED"): set(),    # revalidate_item() only
+    ("SEMANTIC_PROOF_PENDING", "REVIEW_REQUIRED"): set(), # revalidate_item() only
     ("VERIFIED", "REVIEW_REQUIRED"): {"TEACHER"},     # manual reopen on new evidence
 }
 
@@ -240,14 +246,13 @@ def _write_transition_in_txn(
     if to_status in ("TEACHER_APPROVED", "REJECTED"):
         try:
             from pipeline.query_engine.claim_provenance import _set_human_review_in_txn
-        except ImportError:
-            pass
-        else:
-            _set_human_review_in_txn(
-                conn, item_id,
-                status="HUMAN_VERIFIED" if to_status == "TEACHER_APPROVED" else "HUMAN_REJECTED",
-                event_id=event["event_id"],
-            )
+        except ImportError as exc:
+            raise ReviewStateError(f"Claim provenance subsystem unavailable: {exc}") from exc
+        _set_human_review_in_txn(
+            conn, item_id,
+            status="HUMAN_VERIFIED" if to_status == "TEACHER_APPROVED" else "HUMAN_REJECTED",
+            event_id=event["event_id"],
+        )
     return event
 
 
@@ -357,6 +362,27 @@ def get_review_queue(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
             WHERE review_status IN ({placeholders})
             ORDER BY item_id""",
         QUEUE_STATES,
+    ).fetchall()
+    return [
+        {
+            "item_id": r[0],
+            "review_status": r[1],
+            "reviewer_id": r[2],
+            "review_version": r[3],
+        }
+        for r in rows
+    ]
+
+
+def get_proof_queue(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
+    """Proof Queue = items in SEMANTIC_PROOF_PENDING waiting for independent solver / proof completion."""
+    placeholders = ",".join("?" for _ in PROOF_QUEUE_STATES)
+    rows = conn.execute(
+        f"""SELECT item_id, review_status, reviewer_id, review_version
+            FROM question_item
+            WHERE review_status IN ({placeholders})
+            ORDER BY item_id""",
+        PROOF_QUEUE_STATES,
     ).fetchall()
     return [
         {

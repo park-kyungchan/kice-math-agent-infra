@@ -1,6 +1,6 @@
 # CSAT Mathematics Multi-Dimensional Analysis Architecture Specification (Taxonomy_Spec.md)
 
-This specification defines the **3-Layer 8-Axis Taxonomy Schema**, the SQLite Database DDL (analysis + governance tables), and the **Teacher Review State Machine** for zero-context agent reasoning and **Math Instructors** across **1,350 CSAT/KICE Mathematics questions (2015–2026)** (v2.8.2).
+This specification defines the **3-Layer 8-Axis Taxonomy Schema**, the SQLite Database DDL (analysis + governance tables), and the **Teacher Review State Machine** for zero-context agent reasoning and **Math Instructors** across **1,350 CSAT/KICE Mathematics questions (2015–2026)** (v2.9.0).
 
 > **SSoT rule (docs/SSOT_MAP.md):** this document is the single source of truth for DB schema, enums, and constraints. Any schema change lands here AND in an idempotent migration script in the same commit; `scripts/validate_ssot_consistency.py` gates drift between this DDL and the live database.
 
@@ -81,7 +81,7 @@ graph TD
 
 ---
 
-## 2. SQLite Entity Schema DDL (`storage/parsed_dataset.db`) — v2.8.2
+## 2. SQLite Entity Schema DDL (`storage/parsed_dataset.db`) — v2.9.0
 
 ```sql
 -- Tier 1: Exam Event
@@ -108,7 +108,7 @@ CREATE TABLE question_item (
     review_status TEXT NOT NULL DEFAULT 'AUTO_ANALYSIS_COMPLETED'
         CHECK (review_status IN (
             'AUTO_ANALYSIS_COMPLETED','REVIEW_REQUIRED','TEACHER_ASSIGNED',
-            'TEACHER_APPROVED','REVISION_REQUESTED','TEACHER_REVISED',
+            'TEACHER_APPROVED','SEMANTIC_PROOF_PENDING','REVISION_REQUESTED','TEACHER_REVISED',
             'REJECTED','VERIFIED')),
     reviewer_id TEXT,
     -- DEPRECATED snapshot column (kept for compatibility, no longer written);
@@ -159,7 +159,14 @@ CREATE TABLE teacher_review_event (
     notes TEXT,
     evidence_json TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(evidence_json)),
     item_version INTEGER NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    principal_id TEXT,
+    principal_type TEXT,
+    request_id TEXT,
+    prev_event_hash TEXT,
+    event_hash TEXT,
+    signature_key_id TEXT DEFAULT 'LEGACY',
+    event_hmac TEXT DEFAULT 'LEGACY_UNSIGNED'
 );
 
 -- P1-1 (v2.8.2): append-only enforcement — teacher_review_event rows may
@@ -212,7 +219,8 @@ workflow exclusively through explicit, event-recorded transitions
 | `TEACHER_ASSIGNED` | `TEACHER_APPROVED`, `REVISION_REQUESTED`, `REJECTED` | teacher decision |
 | `REVISION_REQUESTED` | `TEACHER_REVISED` | revision actually applied (`--review-revise`) |
 | `TEACHER_REVISED` | `REVIEW_REQUIRED` | auto requeue for re-review (sync) |
-| `TEACHER_APPROVED` | `VERIFIED`, `REVIEW_REQUIRED` | independent Quality-Plane revalidation (exit gate) |
+| `TEACHER_APPROVED` | `SEMANTIC_PROOF_PENDING`, `VERIFIED`, `REVIEW_REQUIRED` | independent Quality-Plane revalidation (exit gate) |
+| `SEMANTIC_PROOF_PENDING` | `VERIFIED`, `REVIEW_REQUIRED` | independent solver & proof completion |
 | `REJECTED` | — (terminal) | |
 | `VERIFIED` | `REVIEW_REQUIRED` | reopened on new evidence |
 

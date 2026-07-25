@@ -42,11 +42,18 @@ class ClaimProvenanceTestBase(unittest.TestCase):
         self.fetcher = QuestionFetcher(db_path=self.db)
 
     def record_sample_claim(self, conn):
+        row = conn.execute("SELECT latex_content FROM question_item WHERE item_id='ITEM_FULL'").fetchone()
+        h_exam = cp.content_hash(row[0], mode="utf8")
         return cp.record_claim(
             conn, 'ITEM_FULL', 'Axis_6', '/historical_precedents/0/relation_type',
             'ITEM_X is a direct genealogy parent', 'INFERENCE',
-            source_refs=[{'source_type': 'ORIGINAL_EXAM_TEXT', 'item_id': 'ITEM_X',
-                          'field': 'latex_content'}],
+            source_refs=[{
+                'schema_version': 1,
+                'source_type': 'ORIGINAL_EXAM_TEXT',
+                'item_id': 'ITEM_FULL',
+                'field': 'latex_content',
+                'content_hash': h_exam,
+            }],
             derived_by={'actor_type': 'AGENT', 'actor_id': 'axis6-genealogy-agent',
                         'model': 'any-vendor-model'},
             confidence_score=0.74,
@@ -66,7 +73,7 @@ class TestClaimProvenance(ClaimProvenanceTestBase):
         self.assertEqual(stored['claim_type'], 'INFERENCE')
         self.assertEqual(stored['json_pointer'], '/historical_precedents/0/relation_type')
         self.assertEqual(stored['derived_by']['actor_id'], 'axis6-genealogy-agent')
-        self.assertEqual(stored['source_refs'][0]['item_id'], 'ITEM_X')
+        self.assertEqual(stored['source_refs'][0]['item_id'], 'ITEM_FULL')
         # mirrored into the axis dict because Axis_6 analysis exists
         self.assertEqual(len(item['axes']['Axis_6']['provenance']), 1)
 
@@ -117,7 +124,7 @@ class TestClaimProvenance(ClaimProvenanceTestBase):
         self.record_sample_claim(conn)
         rs.transition(conn, 'ITEM_FULL', 'REVIEW_REQUIRED', actor_id='sys', actor_type='SYSTEM')
         event = rs.transition(conn, 'ITEM_FULL', 'REJECTED', actor_id='t-kim',
-                              reason_code='MATH_ERROR')
+                               reason_code='MATH_ERROR')
         row = conn.execute(
             "SELECT human_review_status, human_review_event_id FROM claim_provenance "
             "WHERE item_id='ITEM_FULL'"
@@ -127,7 +134,7 @@ class TestClaimProvenance(ClaimProvenanceTestBase):
 
 
 class TestClaimProvenanceValidation(ClaimProvenanceTestBase):
-    """v2.8.2 P0-2 acceptance tests."""
+    """v2.8.3 closed v1 schema and fail-closed acceptance tests."""
 
     def test_claim_requires_nonempty_source_refs(self):
         conn = self.fetcher.get_connection()
@@ -146,39 +153,119 @@ class TestClaimProvenanceValidation(ClaimProvenanceTestBase):
 
     def test_claim_actor_type_is_closed_enum(self):
         conn = self.fetcher.get_connection()
+        row = conn.execute("SELECT latex_content FROM question_item WHERE item_id='ITEM_FULL'").fetchone()
+        h_exam = cp.content_hash(row[0], mode="utf8")
+        ref = {
+            'schema_version': 1,
+            'source_type': 'ORIGINAL_EXAM_TEXT',
+            'item_id': 'ITEM_FULL',
+            'field': 'latex_content',
+            'content_hash': h_exam,
+        }
         with self.assertRaises(cp.ProvenanceError):
             cp.record_claim(
                 conn, 'ITEM_FULL', 'Axis_6', '/historical_precedents/0/relation_type',
                 'stmt', 'INFERENCE',
-                source_refs=[{'source_type': 'ORIGINAL_EXAM_TEXT', 'item_id': 'ITEM_X'}],
+                source_refs=[ref],
                 derived_by={'actor_type': 'HUMAN', 'actor_id': 'a'},
             )
 
-    def test_claim_pointer_targets_existing_axis_field(self):
+    def test_v1_source_refs_closed_schema_validation(self):
         conn = self.fetcher.get_connection()
-        # Axis_3 has real analysis on ITEM_FULL: {"review_required": True, "confidence_score": 0.5}
+        row = conn.execute("SELECT latex_content FROM question_item WHERE item_id='ITEM_FULL'").fetchone()
+        h_exam = cp.content_hash(row[0], mode="utf8")
+
+        # 1. Valid ORIGINAL_EXAM_TEXT
+        ref_valid = {
+            'schema_version': 1,
+            'source_type': 'ORIGINAL_EXAM_TEXT',
+            'item_id': 'ITEM_FULL',
+            'field': 'latex_content',
+            'content_hash': h_exam,
+        }
         claim = cp.record_claim(
-            conn, 'ITEM_FULL', 'Axis_3', '/confidence_score', 'confidence is 0.5', 'FACT',
-            source_refs=[{'source_type': 'AXIS_ANALYSIS', 'item_id': 'ITEM_FULL',
-                          'field': 'axis3_symbolic_modeling'}],
-            derived_by={'actor_type': 'SYSTEM', 'actor_id': 'axis3-agent'},
+            conn, 'ITEM_FULL', 'Axis_6', '/historical_precedents/0/relation_type',
+            'stmt', 'INFERENCE', source_refs=[ref_valid],
+            derived_by={'actor_type': 'AGENT', 'actor_id': 'a'},
         )
         self.assertTrue(claim['claim_id'].startswith('CLM-'))
 
-        # Pointer that does not exist in Axis_3's real JSON.
+        # 2. Hash mismatch
+        ref_bad_hash = dict(ref_valid, content_hash='sha256:' + '0'*64)
         with self.assertRaises(cp.ProvenanceError):
             cp.record_claim(
-                conn, 'ITEM_FULL', 'Axis_3', '/nonexistent_field', 'stmt', 'FACT',
-                source_refs=[{'source_type': 'AXIS_ANALYSIS', 'item_id': 'ITEM_FULL'}],
-                derived_by={'actor_type': 'SYSTEM', 'actor_id': 'axis3-agent'},
+                conn, 'ITEM_FULL', 'Axis_6', '/historical_precedents/0/relation_type',
+                'stmt', 'INFERENCE', source_refs=[ref_bad_hash],
+                derived_by={'actor_type': 'AGENT', 'actor_id': 'a'},
             )
 
-        # Axis with NO analysis at all on this item (ITEM_FULL has no Axis_1 data).
+        # 3. Unknown key in dict
+        ref_unknown_key = dict(ref_valid, extra_field='forbidden')
         with self.assertRaises(cp.ProvenanceError):
             cp.record_claim(
-                conn, 'ITEM_FULL', 'Axis_1', '/anything', 'stmt', 'FACT',
-                source_refs=[{'source_type': 'AXIS_ANALYSIS', 'item_id': 'ITEM_FULL'}],
-                derived_by={'actor_type': 'SYSTEM', 'actor_id': 'axis3-agent'},
+                conn, 'ITEM_FULL', 'Axis_6', '/historical_precedents/0/relation_type',
+                'stmt', 'INFERENCE', source_refs=[ref_unknown_key],
+                derived_by={'actor_type': 'AGENT', 'actor_id': 'a'},
+            )
+
+        # 4. Non-existent target item
+        ref_fake_item = dict(ref_valid, item_id='NON_EXISTENT_ITEM')
+        with self.assertRaises(cp.ProvenanceError):
+            cp.record_claim(
+                conn, 'ITEM_FULL', 'Axis_6', '/historical_precedents/0/relation_type',
+                'stmt', 'INFERENCE', source_refs=[ref_fake_item],
+                derived_by={'actor_type': 'AGENT', 'actor_id': 'a'},
+            )
+
+        # 5. Valid QUESTION_ITEM_FIELD
+        ans = conn.execute("SELECT answer FROM question_item WHERE item_id='ITEM_FULL'").fetchone()[0]
+        h_ans = cp.content_hash(ans, mode="json")
+        ref_qif = {
+            'schema_version': 1,
+            'source_type': 'QUESTION_ITEM_FIELD',
+            'item_id': 'ITEM_FULL',
+            'field': 'answer',
+            'content_hash': h_ans,
+        }
+        claim2 = cp.record_claim(
+            conn, 'ITEM_FULL', 'Axis_6', '/historical_precedents/0/relation_type',
+            'stmt', 'INFERENCE', source_refs=[ref_qif],
+            derived_by={'actor_type': 'AGENT', 'actor_id': 'a'},
+        )
+        self.assertTrue(claim2['claim_id'].startswith('CLM-'))
+
+        # 6. Valid AXIS_ANALYSIS
+        h_axis = cp.content_hash("DIRECT_GENEALOGY", mode="json")
+        ref_axis = {
+            'schema_version': 1,
+            'source_type': 'AXIS_ANALYSIS',
+            'item_id': 'ITEM_FULL',
+            'field': 'axis6_genealogy',
+            'json_pointer': '/historical_precedents/0/relation_type',
+            'content_hash': h_axis,
+        }
+        claim3 = cp.record_claim(
+            conn, 'ITEM_FULL', 'Axis_6', '/historical_precedents/0/relation_type',
+            'stmt', 'INFERENCE', source_refs=[ref_axis],
+            derived_by={'actor_type': 'AGENT', 'actor_id': 'a'},
+        )
+        self.assertTrue(claim3['claim_id'].startswith('CLM-'))
+
+        # 7. AXIS_ANALYSIS invalid pointer
+        ref_axis_bad_pointer = dict(ref_axis, json_pointer='/non_existent_pointer', content_hash=h_axis)
+        with self.assertRaises(cp.ProvenanceError):
+            cp.record_claim(
+                conn, 'ITEM_FULL', 'Axis_6', '/historical_precedents/0/relation_type',
+                'stmt', 'INFERENCE', source_refs=[ref_axis_bad_pointer],
+                derived_by={'actor_type': 'AGENT', 'actor_id': 'a'},
+            )
+
+        # 8. Duplicate source reference
+        with self.assertRaises(cp.ProvenanceError):
+            cp.record_claim(
+                conn, 'ITEM_FULL', 'Axis_6', '/historical_precedents/0/relation_type',
+                'stmt', 'INFERENCE', source_refs=[ref_valid, ref_valid],
+                derived_by={'actor_type': 'AGENT', 'actor_id': 'a'},
             )
 
 

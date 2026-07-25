@@ -353,7 +353,7 @@ class TestQualityPlaneJudges(unittest.TestCase):
         fetcher = QuestionFetcher()
         item = fetcher.get_question("202411_MATH_DIF_22")
         qp_res = fetcher.evaluate_quality_plane("202411_MATH_DIF_22")
-        self.assertIn(qp_res.status, ["VERIFIED", "PROVISIONAL", "VETOED"])
+        self.assertIn(qp_res.status, ["VERIFIED", "PROVISIONAL", "SEMANTIC_PROOF_PENDING", "VETOED"])
         self.assertIsInstance(_is_item_unverified(item), bool)
 
 

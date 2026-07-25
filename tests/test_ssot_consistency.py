@@ -81,9 +81,12 @@ class TestSsotConsistency(unittest.TestCase):
         self.assertIsInstance(evidence['run_id'], int)
         self.assertRegex(evidence['tested_head_sha'], r'^[0-9a-f]{40}$',
                          'tested_head_sha must be a 40-hex-char SHA (placeholder or real)')
-        # A placeholder conclusion must never silently read as a real pass --
-        # 'success' may ONLY be recorded once a real run has actually been observed.
         self.assertIn(evidence['conclusion'], ('success', 'failure', 'PENDING_VERIFICATION'))
+        if evidence['conclusion'] == 'success':
+            self.assertGreater(evidence['run_id'], 0, 'run_id must be > 0 on success conclusion')
+            self.assertNotEqual(evidence['tested_head_sha'], '0' * 40, 'tested_head_sha must not be null SHA on success')
+            self.assertRegex(evidence['verified_at'], r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$', 'verified_at must be RFC 3339 timestamp')
+            self.assertEqual(state.get('ci_status'), 'GOVERNANCE_CI_GREEN')
 
     def test_validator_cli_green(self):
         import subprocess
