@@ -1,6 +1,6 @@
 # SSoT (Single Source of Truth) Governance Map
 
-This document establishes the authoritative sources of truth for all domains within the `kice-math-agent-infra` system (v2.9.0). Any conflict between documents must be resolved by referring to the designated SSoT for that domain.
+This document establishes the authoritative sources of truth for all domains within the `kice-math-agent-infra` system (v2.9.1). Any conflict between documents must be resolved by referring to the designated SSoT for that domain.
 
 > **Drift gate:** `scripts/validate_ssot_consistency.py` mechanically checks (1) Taxonomy_Spec DDL == live DB schema, (2) MANIFEST.json references and never duplicates PROJECT_STATE.json, (3) version-string coherence across root docs, (4) the documented transition matrix == `review_state.ALLOWED_TRANSITIONS`. CI runs it on every PR.
 

@@ -7,6 +7,7 @@
   "teacher_governance_loop": "ACTIVE",
   "claim_provenance": "ACTIVE",
   "governance_enforcement": "ADVERSARIAL_BOUNDARY_ENFORCED",
+  "audit_integrity": "LOCAL_HASH_CHAIN_IMPLEMENTED",
   "audit_authenticity": "SERVICE_SIGNED",
   "semantic_verification": "APPROVED",
   "ci_status": "GOVERNANCE_CI_GREEN",
@@ -18,12 +19,12 @@
     "conclusion": "success",
     "verified_at": "2026-07-25T01:11:40Z"
   },
-  "overall_status": "GOVERNANCE_ENFORCED_TRUSTED",
-  "version": "v2.9.0",
+  "overall_status": "VERIFIED",
+  "version": "v2.9.1",
   "_semantics": {
-    "ADVERSARIAL_BOUNDARY_ENFORCED": "v2.8.4 Milestone B: Governance Service API isolates write credentials, caller payload actor_id cannot override authenticated principal, teacher review events are HMAC-SHA-256 signed with per-item hash chaining, and CI attestation verifier prevents stale commit evidence from activating current HEAD.",
-    "SERVICE_SIGNED": "All post-v2.8.4 teacher review events are cryptographically signed with HMAC-SHA-256 and chained per item; legacy events are backfilled as LEGACY_UNSIGNED.",
-    "APPROVED": "v2.9.0 Milestone C: JudgeExecutionStatus (PASS, FAIL, NOT_RUN, ERROR) replaces fail-open defaults; mandatory independent solvers and holdout parameter variations enforced; SEMANTIC_PROOF_PENDING proof queue active; strict 7-point gate approval enforced before VERIFIED status.",
+    "SERVICE_API_NOT_ISOLATED": "v2.9.1 Hotfix: Governance Service API implemented with intent-based endpoints, but in-process Python boundary requires OS environment secret and DB trigger enforcement.",
+    "PARTIAL_SCAFFOLDED": "v2.9.1 Hotfix: Independent solver & holdout engines scaffolded; non-circular SymPy execution and Canonical Answer Schema being enforced.",
+    "PROVISIONAL": "v2.9.1 Hotfix: Semantic proof pending true non-circular solver execution, dynamic holdout variation, and live GitHub REST API attestation.",
     "authority": "This file is the single source of truth for dynamic project state; MANIFEST.json must reference, never duplicate, it."
   }
 }

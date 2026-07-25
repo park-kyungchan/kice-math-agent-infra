@@ -12,9 +12,25 @@ import sqlite3
 import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
+import os
+
 GENESIS_PREV_HASH = "0" * 64
 DEFAULT_SERVICE_KEY = "kice-governance-service-hmac-secret-key-v1"
 DEFAULT_KEY_ID = "v1-service-key"
+
+
+class AuditKeyError(Exception):
+    """Raised when HMAC secret key is missing or unconfigured."""
+    pass
+
+
+def get_secret_key(fallback_ok: bool = True) -> str:
+    key = os.environ.get("KICE_GOVERNANCE_HMAC_SECRET")
+    if key:
+        return key
+    if fallback_ok:
+        return DEFAULT_SERVICE_KEY
+    raise AuditKeyError("KICE_GOVERNANCE_HMAC_SECRET environment variable is missing")
 
 
 def canonical_event_bytes(event: Dict[str, Any]) -> bytes:
@@ -46,8 +62,9 @@ def compute_event_hash(event: Dict[str, Any], prev_event_hash: str) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def compute_event_hmac(event_hash: str, secret_key: str = DEFAULT_SERVICE_KEY) -> str:
-    key_bytes = secret_key.encode("utf-8")
+def compute_event_hmac(event_hash: str, secret_key: Optional[str] = None) -> str:
+    key_str = secret_key or get_secret_key()
+    key_bytes = key_str.encode("utf-8")
     msg_bytes = event_hash.encode("utf-8")
     return hmac.new(key_bytes, msg_bytes, hashlib.sha256).hexdigest()
 

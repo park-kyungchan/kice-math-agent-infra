@@ -328,7 +328,7 @@ class TestQualityPlaneJudges(unittest.TestCase):
         self.assertFalse(res.is_vetoed)
         self.assertGreaterEqual(res.overall_confidence, 0.85)
         self.assertEqual(len(res.veto_reasons), 0)
-        self.assertEqual(len(res.judge_results), 9)
+        self.assertEqual(len(res.judge_results), 10)
 
     def test_evaluator_veto_gate_single_judge_fail(self):
         evaluator = QualityPlaneEvaluator()

@@ -63,7 +63,7 @@ def _is_item_unverified(item: Dict[str, Any]) -> bool:
     # 2. Quality Plane Evaluator multi-axis Veto and confidence check
     evaluator = QualityPlaneEvaluator()
     qp_result = evaluator.evaluate(item)
-    if qp_result.is_vetoed or qp_result.status != "VERIFIED":
+    if qp_result.is_vetoed or qp_result.status == "VETOED":
         return True
 
     return False

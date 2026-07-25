@@ -276,24 +276,18 @@ class MathEquivalenceJudge:
 # 3. IndependentSolverJudge
 # ---------------------------------------------------------------------------
 class IndependentSolverJudge:
-    """Checks independent solution derivation output against ground truth answer."""
+    """Executes IndependentSolverEngine on raw LaTeX expressions without receiving ground_truth or copying Axis answers."""
 
     def evaluate(self, item: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> JudgeResult:
         name = "IndependentSolverJudge"
         ground_truth = item.get("answer")
 
-        # 1. Check if solved_answer is explicitly provided in context, item, Axis_3, or Axis_5
+        # 1. Check if explicit solved_answer or calc_value is in context/item (e.g. test overrides)
         solved_answer = None
         if context and "solved_answer" in context:
             solved_answer = context["solved_answer"]
-        elif "solved_answer" in item:
-            solved_answer = item["solved_answer"]
-        else:
-            axis3 = _get_axis_data(item, "Axis_3")
-            solved_answer = axis3.get("solved_answer") or axis3.get("independent_solution", {}).get("answer")
-            if solved_answer is None:
-                axis5 = _get_axis_data(item, "Axis_5")
-                solved_answer = axis5.get("solved_answer")
+        elif context and "calc_value" in context:
+            solved_answer = context["calc_value"]
 
         if solved_answer is not None and ground_truth is not None and ground_truth != 0:
             is_match = _compare_numeric_values(solved_answer, ground_truth)
@@ -317,50 +311,132 @@ class IndependentSolverJudge:
                     details={"solved_answer": solved_answer, "ground_truth": ground_truth},
                 )
 
-        # 2. Dynamic independent solver engine invocation
-        if item.get("latex_content"):
-            from pipeline.query_engine.independent_solver import IndependentSolverEngine
-            solver = IndependentSolverEngine()
-            res = solver.solve_item(item)
-            if res.get("execution_status") == "PASS":
+        latex = item.get("latex_content")
+        if not latex:
+            return JudgeResult(
+                judge_name=name,
+                passed=False,
+                score=0.0,
+                is_vetoed=False,
+                execution_status=JudgeExecutionStatus.NOT_RUN,
+                reason="Missing latex_content",
+            )
+
+        from pipeline.query_engine.independent_solver import IndependentSolverEngine
+        solver = IndependentSolverEngine()
+        res = solver.solve_item(item)
+
+        status_str = res.get("execution_status", "NOT_RUN")
+        if status_str == "PASS":
+            exec_status = JudgeExecutionStatus.PASS
+            passed = True
+            is_vetoed = False
+            score = 1.0
+        elif status_str == "FAIL":
+            exec_status = JudgeExecutionStatus.FAIL
+            passed = False
+            is_vetoed = True
+            score = 0.0
+        elif status_str == "ERROR":
+            exec_status = JudgeExecutionStatus.ERROR
+            passed = False
+            is_vetoed = True
+            score = 0.0
+        else:
+            exec_status = JudgeExecutionStatus.NOT_RUN
+            passed = False
+            is_vetoed = False
+            score = 0.0
+
+        return JudgeResult(
+            judge_name=name,
+            passed=passed,
+            score=score,
+            is_vetoed=is_vetoed,
+            execution_status=exec_status,
+            reason=res.get("reason"),
+            details=res,
+        )
+
+
+class OptionBindingJudge:
+    """Binds IndependentSolverJudge calculated numeric output against canonical_answer_json."""
+
+    def evaluate(self, item: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> JudgeResult:
+        name = "OptionBindingJudge"
+        canonical_raw = item.get("canonical_answer_json")
+        if not canonical_raw:
+            # Fallback to answer column if canonical_answer_json is not yet backfilled
+            ans = item.get("answer")
+            if ans is not None and ans != 0:
+                canonical = {"response_type": "SHORT_ANSWER", "correct_option_index": None, "correct_value": ans}
+            else:
+                return JudgeResult(
+                    judge_name=name,
+                    passed=False,
+                    score=0.0,
+                    is_vetoed=False,
+                    execution_status=JudgeExecutionStatus.NOT_RUN,
+                    reason="Missing canonical_answer_json or answer in question_item",
+                )
+        elif isinstance(canonical_raw, str):
+            try:
+                canonical = json.loads(canonical_raw)
+            except Exception:
+                canonical = {}
+        else:
+            canonical = canonical_raw
+
+        resp_type = canonical.get("response_type", "SHORT_ANSWER")
+        correct_val = canonical.get("correct_value")
+
+        # Get calc_value from context solver_res or item
+        calc_val = None
+        if context:
+            calc_val = context.get("calc_value")
+            if calc_val is None and "solver_res" in context:
+                calc_val = context["solver_res"].get("calc_value")
+
+        if calc_val is None:
+            return JudgeResult(
+                judge_name=name,
+                passed=False,
+                score=0.0,
+                is_vetoed=False,
+                execution_status=JudgeExecutionStatus.NOT_RUN,
+                reason="No calculated value from IndependentSolverJudge to bind",
+                details=canonical,
+            )
+
+        if correct_val is not None:
+            if _compare_numeric_values(calc_val, correct_val):
                 return JudgeResult(
                     judge_name=name,
                     passed=True,
                     score=1.0,
                     is_vetoed=False,
                     execution_status=JudgeExecutionStatus.PASS,
-                    details=res,
+                    details={"calc_value": calc_val, "correct_value": correct_val, "response_type": resp_type},
                 )
-            elif res.get("execution_status") == "FAIL":
+            else:
                 return JudgeResult(
                     judge_name=name,
                     passed=False,
                     score=0.0,
                     is_vetoed=True,
                     execution_status=JudgeExecutionStatus.FAIL,
-                    reason=f"Independent solver answer ({res.get('solved_answer')}) conflicts with ground truth ({ground_truth})",
-                    details=res,
-                )
-            elif res.get("execution_status") == "ERROR":
-                return JudgeResult(
-                    judge_name=name,
-                    passed=False,
-                    score=0.0,
-                    is_vetoed=True,
-                    execution_status=JudgeExecutionStatus.ERROR,
-                    reason=res.get("reason", "Solver execution error"),
-                    details=res,
+                    reason=f"Calculated value ({calc_val}) does not match canonical correct_value ({correct_val})",
+                    details={"calc_value": calc_val, "correct_value": correct_val},
                 )
 
-        # 3. Mandatory fail-closed NOT_RUN status (Codex Review §3, §4.2, Section 7.1)
         return JudgeResult(
             judge_name=name,
             passed=False,
             score=0.0,
             is_vetoed=False,
             execution_status=JudgeExecutionStatus.NOT_RUN,
-            reason="Independent solver execution was NOT run for this item",
-            details={"solved_answer": solved_answer, "ground_truth": ground_truth},
+            reason="Canonical correct_value is missing",
+            details=canonical,
         )
 
 
@@ -675,51 +751,71 @@ class AdversarialJudge:
             details=adv,
         )
 
-
 # ---------------------------------------------------------------------------
 # 9. HoldoutJudge
 # ---------------------------------------------------------------------------
 class HoldoutJudge:
-    """Checks unseen holdout item generalization status."""
+    """Executes dynamic parameter variation solver checks using HoldoutVerifierEngine."""
 
     def evaluate(self, item: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> JudgeResult:
         name = "HoldoutJudge"
         axis7 = _get_axis_data(item, "Axis_7")
-        holdout = (context or {}).get("holdout") or item.get("holdout") or axis7.get("holdout") or {}
-
-        if holdout.get("holdout_verified") is False or axis7.get("holdout_verified") is False:
+        ctx_holdout = (context or {}).get("holdout", {})
+        if ctx_holdout.get("holdout_verified") is False or (isinstance(axis7, dict) and axis7.get("holdout_verified") is False):
             return JudgeResult(
                 judge_name=name,
                 passed=False,
                 score=0.0,
                 is_vetoed=True,
+                execution_status=JudgeExecutionStatus.FAIL,
                 reason="Unseen holdout generalization test failed",
-                details=holdout,
+                details=ctx_holdout,
             )
 
-        gen_score = holdout.get("generalization_score") or axis7.get("generalization_score")
-        if gen_score is not None:
-            try:
-                score_val = float(gen_score)
-                if score_val < 0.70:
-                    return JudgeResult(
-                        judge_name=name,
-                        passed=False,
-                        score=score_val,
-                        is_vetoed=True,
-                        reason=f"Holdout generalization score ({score_val:.2f}) below 0.70 threshold",
-                        details=holdout,
-                    )
-            except (ValueError, TypeError):
-                pass
+        from pipeline.query_engine.independent_solver import HoldoutVerifierEngine
+        verifier = HoldoutVerifierEngine()
+        res = verifier.verify_holdout_variations(item)
 
-        return JudgeResult(
-            judge_name=name,
-            passed=True,
-            score=1.0,
-            is_vetoed=False,
-            details=holdout,
-        )
+        status_str = res.get("execution_status", "NOT_RUN")
+        if status_str == "PASS" and res.get("is_holdout_passed") is True:
+            return JudgeResult(
+                judge_name=name,
+                passed=True,
+                score=1.0,
+                is_vetoed=False,
+                execution_status=JudgeExecutionStatus.PASS,
+                details=res,
+            )
+        elif status_str == "FAIL":
+            return JudgeResult(
+                judge_name=name,
+                passed=False,
+                score=0.0,
+                is_vetoed=True,
+                execution_status=JudgeExecutionStatus.FAIL,
+                reason=res.get("reason", "Unseen holdout generalization test failed"),
+                details=res,
+            )
+        elif status_str == "ERROR":
+            return JudgeResult(
+                judge_name=name,
+                passed=False,
+                score=0.0,
+                is_vetoed=True,
+                execution_status=JudgeExecutionStatus.ERROR,
+                reason=res.get("reason", "Holdout verifier error"),
+                details=res,
+            )
+        else:
+            return JudgeResult(
+                judge_name=name,
+                passed=False,
+                score=0.0,
+                is_vetoed=False,
+                execution_status=JudgeExecutionStatus.NOT_RUN,
+                reason=res.get("reason", "Holdout parameter variation not executed"),
+                details=res,
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -727,7 +823,7 @@ class HoldoutJudge:
 # ---------------------------------------------------------------------------
 class QualityPlaneEvaluator:
     """
-    Aggregates all 9 Independent Judges, computes weighted confidence, and applies Veto gates.
+    Aggregates all 10 Independent Judges, computes weighted confidence, and applies Veto gates.
     """
 
     def __init__(self, weights: Optional[Dict[str, float]] = None):
@@ -735,6 +831,7 @@ class QualityPlaneEvaluator:
             ParsingJudge(),
             MathEquivalenceJudge(),
             IndependentSolverJudge(),
+            OptionBindingJudge(),
             DistractorReplayJudge(),
             CurriculumJudge(),
             LineageJudge(),
@@ -742,7 +839,7 @@ class QualityPlaneEvaluator:
             AdversarialJudge(),
             HoldoutJudge(),
         ]
-        
+
         # Default equal weights if not specified
         default_weight = 1.0 / len(self.judges)
         self.weights: Dict[str, float] = {}
@@ -752,17 +849,24 @@ class QualityPlaneEvaluator:
 
     def evaluate(self, item: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> QualityPlaneResult:
         """
-        Evaluate item against all 9 Independent Judges.
+        Evaluate item against all 10 Independent Judges.
         """
         judge_results: Dict[str, JudgeResult] = {}
         veto_reasons: List[str] = []
         weighted_score_sum = 0.0
         total_weight = 0.0
 
+        ctx = dict(context or {})
+
         for judge in self.judges:
             j_name = judge.__class__.__name__
-            res = judge.evaluate(item, context=context)
+            res = judge.evaluate(item, context=ctx)
             judge_results[j_name] = res
+
+            if j_name == "IndependentSolverJudge" and res.details:
+                ctx["solver_res"] = res.details
+                if "calc_value" in res.details:
+                    ctx["calc_value"] = res.details["calc_value"]
 
             w = self.weights.get(j_name, 1.0 / len(self.judges))
             weighted_score_sum += res.score * w
@@ -775,12 +879,17 @@ class QualityPlaneEvaluator:
         overall_confidence = weighted_score_sum / total_weight if total_weight > 0 else 0.0
 
         solver_res = judge_results.get("IndependentSolverJudge")
+        option_res = judge_results.get("OptionBindingJudge")
+        holdout_res = judge_results.get("HoldoutJudge")
+
         solver_passed = solver_res and solver_res.execution_status == JudgeExecutionStatus.PASS
+        option_passed = option_res and option_res.execution_status == JudgeExecutionStatus.PASS
+        holdout_passed = holdout_res and holdout_res.execution_status == JudgeExecutionStatus.PASS
 
         if veto_reasons:
             status = "VETOED"
             is_vetoed = True
-        elif not solver_passed:
+        elif not (solver_passed and option_passed and holdout_passed):
             status = "SEMANTIC_PROOF_PENDING"
             is_vetoed = False
         elif overall_confidence < 0.90:

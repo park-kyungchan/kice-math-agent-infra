@@ -194,13 +194,18 @@ class GovernanceService:
             )
 
     def revalidate_item(self, item_id: str, principal: Dict[str, Any], expected_version: Optional[int] = None) -> Dict[str, Any]:
-        """Reevaluate Quality Plane independently and apply 7-point gate pre-conditions.
+        """Reevaluate Quality Plane independently and apply strict 7-point gate pre-conditions.
         Does NOT accept to_status, quality_plane_status, or reason_code from caller."""
         self.fetcher.clear_cache()
         qp = self.fetcher.evaluate_quality_plane(item_id)
 
         solver_res = qp.judge_results.get("IndependentSolverJudge")
+        option_res = qp.judge_results.get("OptionBindingJudge")
+        holdout_res = qp.judge_results.get("HoldoutJudge")
+
         solver_pass = solver_res and solver_res.execution_status == "PASS"
+        option_pass = option_res and option_res.execution_status == "PASS"
+        holdout_pass = holdout_res and holdout_res.execution_status == "PASS"
         conf_pass = qp.overall_confidence >= 0.90 and not qp.is_vetoed
 
         with self._get_connection() as conn:
@@ -208,11 +213,11 @@ class GovernanceService:
             audit_violations = verify_audit_chain(conn, item_id)
         audit_pass = len(audit_violations) == 0
 
-        if solver_pass and conf_pass and audit_pass:
+        if solver_pass and option_pass and holdout_pass and conf_pass and audit_pass:
             to_status = "VERIFIED"
             reason_code = "GOVERNANCE_GATE_APPROVED"
             green = True
-        elif not solver_pass:
+        elif not (solver_pass and option_pass and holdout_pass):
             to_status = "SEMANTIC_PROOF_PENDING"
             reason_code = "SEMANTIC_PROOF_PENDING"
             green = False
@@ -228,6 +233,8 @@ class GovernanceService:
                 "overall_confidence": qp.overall_confidence,
                 "audit_chain_valid": audit_pass,
                 "solver_passed": solver_pass,
+                "option_binding_passed": option_pass,
+                "holdout_passed": holdout_pass,
             }
         ]
 

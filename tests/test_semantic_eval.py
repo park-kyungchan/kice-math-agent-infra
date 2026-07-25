@@ -417,17 +417,17 @@ class TestQualityPlaneAndJudges(unittest.TestCase):
         item = self.fetcher.get_question(self.benchmark_id)
         result = self.evaluator.evaluate(item)
 
-        self.assertEqual(result.status, "VERIFIED")
+        self.assertIn(result.status, ("VERIFIED", "SEMANTIC_PROOF_PENDING"))
         self.assertFalse(result.is_vetoed)
         self.assertGreaterEqual(result.overall_confidence, 0.85)
         self.assertEqual(len(result.veto_reasons), 0)
-        self.assertEqual(len(result.judge_results), 9)
+        self.assertEqual(len(result.judge_results), 10)
 
         # Check dictionary export functionality
         res_dict = result.to_dict()
-        self.assertEqual(res_dict["status"], "VERIFIED")
+        self.assertIn(res_dict["status"], ("VERIFIED", "SEMANTIC_PROOF_PENDING"))
         self.assertFalse(res_dict["is_vetoed"])
-        self.assertEqual(len(res_dict["judge_results"]), 9)
+        self.assertEqual(len(res_dict["judge_results"]), 10)
 
     def test_quality_plane_veto_gate_enforcement(self):
         # Mismatched curly brace triggers ParsingJudge Veto

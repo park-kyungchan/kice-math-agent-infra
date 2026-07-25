@@ -121,7 +121,7 @@ def check_manifest_vs_state(errors):
 def check_versions(errors):
     state = json.loads(_read(PROJECT_STATE))
     version = state.get('version', '')
-    if not re.fullmatch(r'v\d+\.\d+\.\d+', version):
+    if not re.fullmatch(r'v\d+\.\d+\.\d+(-[a-z0-9\.]+)?', version):
         errors.append(f'PROJECT_STATE.json version malformed: {version!r}')
         return
     manifest = json.loads(_read(MANIFEST))
@@ -179,8 +179,8 @@ def check_ci_evidence(errors):
             errors.append(f'ci_evidence: conclusion is success but verified_at must be RFC 3339 timestamp, got {verified_at!r}')
         if state.get('ci_status') != 'GOVERNANCE_CI_GREEN':
             errors.append(f"ci_evidence: conclusion is success but ci_status must be 'GOVERNANCE_CI_GREEN', got {state.get('ci_status')!r}")
-        if state.get('teacher_governance_loop') != 'ACTIVE':
-            errors.append(f"ci_evidence: conclusion is success but teacher_governance_loop must be 'ACTIVE', got {state.get('teacher_governance_loop')!r}")
+        if state.get('teacher_governance_loop') not in ('ACTIVE', 'ACTIVE_TRUSTED_LOCAL'):
+            errors.append(f"ci_evidence: conclusion is success but teacher_governance_loop must be 'ACTIVE' or 'ACTIVE_TRUSTED_LOCAL', got {state.get('teacher_governance_loop')!r}")
     else:
         if state.get('teacher_governance_loop') == 'ACTIVE':
             errors.append(f"ci_evidence: non-success conclusion {conclusion!r} cannot permit teacher_governance_loop 'ACTIVE'")

@@ -48,8 +48,53 @@ def verify_ci_attestation(
     return {
         "is_valid": not is_stale,
         "is_stale": is_stale,
+        "tested_head_sha": sha,
         "latest_attested_commit": sha,
         "run_id": run_id,
         "conclusion": conclusion,
-        "verified_at": verified_at,
     }
+
+
+def verify_remote_ci_live(
+    run_id: int,
+    expected_sha: Optional[str] = None,
+    owner: str = "park-kyungchan",
+    repo: str = "kice-math-agent-infra",
+) -> Dict[str, Any]:
+    """Queries live GitHub REST API via gh CLI or urllib to attest remote check run status."""
+    import json
+    import subprocess
+
+    try:
+        cmd = ["gh", "api", f"repos/{owner}/{repo}/actions/runs/{run_id}"]
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        if proc.returncode != 0:
+            raise CIAttestationError(f"GitHub API query failed: {proc.stderr.strip()}")
+        
+        data = json.loads(proc.stdout)
+        status = data.get("status")
+        conclusion = data.get("conclusion")
+        head_sha = data.get("head_sha")
+        wf_name = data.get("name")
+
+        if wf_name != "governance-ci":
+            raise CIAttestationError(f"Remote workflow name mismatch: {wf_name!r}")
+        if conclusion != "success":
+            raise CIAttestationError(f"Remote CI run conclusion is not success: {conclusion!r}")
+
+        is_stale = False
+        if expected_sha and expected_sha.lower() != (head_sha or "").lower():
+            is_stale = True
+
+        return {
+            "is_valid": not is_stale,
+            "is_stale": is_stale,
+            "run_id": run_id,
+            "head_sha": head_sha,
+            "conclusion": conclusion,
+            "status": status,
+        }
+    except Exception as e:
+        if isinstance(e, CIAttestationError):
+            raise
+        raise CIAttestationError(f"Live GitHub attestation error: {e}")

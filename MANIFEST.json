@@ -1,6 +1,6 @@
 {
   "project_name": "CSAT Mathematics Zero-Context Agent Infra",
-  "version": "v2.9.0",
+  "version": "v2.9.1",
   "project_state_ref": "PROJECT_STATE.json",
   "target_domain": "2027 KICE Mock & CSAT Mathematics (Common + Calculus, Geometry, Prob)",
   "target_personas": ["Zero-Context Autonomous AI Agents", "Math Instructors & Curriculum Developers"],

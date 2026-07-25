@@ -1,6 +1,6 @@
 # CSAT Mathematics Multi-Dimensional Analysis Architecture Specification (Taxonomy_Spec.md)
 
-This specification defines the **3-Layer 8-Axis Taxonomy Schema**, the SQLite Database DDL (analysis + governance tables), and the **Teacher Review State Machine** for zero-context agent reasoning and **Math Instructors** across **1,350 CSAT/KICE Mathematics questions (2015–2026)** (v2.9.0).
+This specification defines the **3-Layer 8-Axis Taxonomy Schema**, the SQLite Database DDL (analysis + governance tables), and the **Teacher Review State Machine** for zero-context agent reasoning and **Math Instructors** across **1,350 CSAT/KICE Mathematics questions (2015–2026)** (v2.9.1).
 
 > **SSoT rule (docs/SSOT_MAP.md):** this document is the single source of truth for DB schema, enums, and constraints. Any schema change lands here AND in an idempotent migration script in the same commit; `scripts/validate_ssot_consistency.py` gates drift between this DDL and the live database.
 
@@ -81,7 +81,7 @@ graph TD
 
 ---
 
-## 2. SQLite Entity Schema DDL (`storage/parsed_dataset.db`) — v2.9.0
+## 2. SQLite Entity Schema DDL (`storage/parsed_dataset.db`) — v2.9.1
 
 ```sql
 -- Tier 1: Exam Event
@@ -114,7 +114,8 @@ CREATE TABLE question_item (
     -- DEPRECATED snapshot column (kept for compatibility, no longer written);
     -- the append-only audit SSoT is teacher_review_event.
     review_history_json TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(review_history_json)),
-    review_version INTEGER NOT NULL DEFAULT 0   -- optimistic locking
+    review_version INTEGER NOT NULL DEFAULT 0,   -- optimistic locking
+    canonical_answer_json TEXT
 );
 
 -- Tier 3: Axis Analysis (3-Layer 8-Axis Flat JSON Columns)
