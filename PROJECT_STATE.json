@@ -12,11 +12,11 @@
   "ci_status": "GOVERNANCE_CI_GREEN",
   "ci_evidence": {
     "workflow": "governance-ci",
-    "run_id": 30098554007,
-    "tested_head_sha": "03aec751aa153b91e4e680487cfb33f060541ef1",
-    "latest_attested_commit": "03aec751aa153b91e4e680487cfb33f060541ef1",
+    "run_id": 30137965074,
+    "tested_head_sha": "6f3a89452a01b8b3009f29337142ccee69b7518e",
+    "latest_attested_commit": "6f3a89452a01b8b3009f29337142ccee69b7518e",
     "conclusion": "success",
-    "verified_at": "2026-07-24T13:51:41Z"
+    "verified_at": "2026-07-25T01:11:40Z"
   },
   "overall_status": "GOVERNANCE_ENFORCED_TRUSTED",
   "version": "v2.9.0",
