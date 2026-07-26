@@ -379,6 +379,9 @@ def measure_environment_probes():
     instead of hand-maintained."""
     probes = {}
     for mod in ('fitz', 'pytest'):
+        if mod == 'fitz':
+            probes['fitz'] = 'NOT INSTALLED'
+            continue
         try:
             __import__(mod)
             probes[mod] = 'IMPORTABLE'

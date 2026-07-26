@@ -78,7 +78,7 @@ Status: Supersedes the 2026-07-25 hand-written ROUTING.md. That version is the a
 
 ### 4a. Package / CLI availability — MEASURED live (re-probed every generation run)
 
-- `fitz`: **IMPORTABLE**
+- `fitz`: **NOT INSTALLED**
 - `pytest`: **NOT INSTALLED**
 - `pdfminer.six`: **NOT INSTALLED**
 - `pypdf`: **IMPORTABLE**
