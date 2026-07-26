@@ -1,8 +1,19 @@
 # CSAT Mathematics Multi-Dimensional Analysis Architecture Specification (Taxonomy_Spec.md)
 
-This specification defines the **3-Layer 8-Axis Taxonomy Schema**, the SQLite Database DDL (analysis + governance tables), and the **Teacher Review State Machine** for zero-context agent reasoning and **Math Instructors** across **1,350 CSAT/KICE Mathematics questions (2015–2026)** (v2.9.1).
+This specification defines the **3-Layer 8-Axis Taxonomy Schema**, the SQLite Database DDL (analysis + governance tables), and the **Teacher Review State Machine** for zero-context agent reasoning and **Math Instructors** across **1,350 CSAT/KICE Mathematics questions (2015–2026)** (v2.10.0).
 
 > **SSoT rule (docs/SSOT_MAP.md):** this document is the single source of truth for DB schema, enums, and constraints. Any schema change lands here AND in an idempotent migration script in the same commit; `scripts/validate_ssot_consistency.py` gates drift between this DDL and the live database.
+
+> **The 8-axis taxonomy below is under owner review** (may be redefined, reduced, or replaced) — see
+> ROUTING.md "Open, unfixed" and the I2 axis-agnostic storage refactor. As of I2, axis IDENTITY lives
+> in `pipeline/query_engine/axis_registry.py` (the single source of axis key/name/status/kind
+> metadata) and axis DATA lives in the generic `analysis_derivation` table (§2), not in 8 hardcoded DDL
+> columns — a new or redefined axis needs a new registry entry and `analysis_derivation` rows, never a
+> migration. `axis_analysis` (§2) is retained as a read-only compatibility VIEW over
+> `analysis_derivation` so every existing reader keeps working unmodified; see
+> `pipeline/migrate_db_axis_agnostic.py`. The taxonomy description in §1 and the JSON payload shapes in
+> §2b remain the current, still-authoritative CONTENT contract for what each axis means and what its
+> payload looks like — only the physical STORAGE of that content changed.
 
 ---
 
@@ -39,6 +50,9 @@ graph TD
 ### Layer 2: Item Mathematical Reasoning
 
 #### [Axis 3] Symbolic Modeling & Concept Map Matching (`axis3_symbolic_modeling`)
+- ⚠ **Known limitation (axis_registry status: `under_review`)**: Concept Map Integration depends on
+  `storage/kice_math_concept_map.json`, which holds only 3 concepts — structurally dead for the rest of
+  the 1,350-item corpus regardless of analysis effort.
 - **Concept Map Integration**: Matches LaTeX expressions to `storage/kice_math_concept_map.json`.
 - **Standard vs. Shortcut Solutions**: Distinguishes standard textbook solutions (`standard_solution`) from instructor shortcut methods (`shortcut_solution`).
 - **Prerequisite & Failure Rules**: Includes explicit schema fields:
@@ -48,6 +62,9 @@ graph TD
   - `shortcut_traps`: Specific boundary cases or counter-conditions where using the shortcut yields incorrect results.
 
 #### [Axis 4] All-Domain Contextual Interpretation Tree (`axis4_contextual_tree`)
+- ⚠ **Known category note (axis_registry status: `under_review`, `kind: analyser`)**: this axis records
+  AGENT REASONING (backtrack telemetry), not a property of the item itself — a category difference from
+  the other analyser axes; do not treat its payload as item metadata.
 - **All-Domain Coverage**: Covers Sequences/Discrete, Algebra/Trig, Geometry/Vectors, ProbStat, Calculus/Functions.
 - **Backtrack Telemetry**: Records explicit trial-and-error reasoning and contradiction resolution in `backtrack_log`.
 
@@ -74,14 +91,21 @@ graph TD
   7. `REJECTED_RELATION` (`genealogy_parent_allowed: false`)
 
 #### [Axis 7] Condition Representation Mutation Chain (`axis7_mutation`)
+- ⚠ **Known category error (axis_registry `kind: generator`)**: this axis is a GENERATOR, not an
+  analyser — it produces mutated condition-representation variants rather than describing the item as
+  given. Grouping it with the other 7 analyser axes is a known taxonomy defect, recorded (not silently
+  normalised away) in `pipeline/query_engine/axis_registry.py`.
 - **Evolutionary Tracking**: Tracks historical shifts in textual phrasing and symbolic notation.
 
 #### [Axis 8] Knowledge Graph Topology (`axis8_knowledge_graph`)
+- ⚠ **Known category error (axis_registry `kind: derived`)**: this axis is DERIVED from axes 1–7 (graph
+  topology computed over their output) and carries no independent signal of its own — a second known
+  taxonomy defect recorded in `pipeline/query_engine/axis_registry.py`.
 - **Graph Topology**: 1,350-item graph node/edge topology, degree centrality, and cluster IDs.
 
 ---
 
-## 2. SQLite Entity Schema DDL (`storage/parsed_dataset.db`) — v2.9.1
+## 2. SQLite Entity Schema DDL (`storage/parsed_dataset.db`) — v2.10.0
 
 ```sql
 -- Tier 1: Exam Event
@@ -118,7 +142,42 @@ CREATE TABLE question_item (
     canonical_answer_json TEXT
 );
 
--- Tier 3: Axis Analysis (3-Layer 8-Axis Flat JSON Columns)
+-- Tier 3a: Analysis Derivation (I2, generic axis-agnostic key-value store)
+-- ---------------------------------------------------------------------
+-- The 8-axis taxonomy below is UNDER OWNER REVIEW (may be redefined,
+-- reduced, or replaced). Axis IDENTITY therefore lives in DATA, not DDL:
+-- this table stores one row per (item, axis, schema_version) with an
+-- opaque JSON payload. A brand-new axis_key -- including one that does not
+-- yet exist in pipeline/query_engine/axis_registry.py, the governance
+-- registry of axis identity/status/kind metadata -- needs zero DDL change
+-- to insert or read. See pipeline/migrate_db_axis_agnostic.py.
+CREATE TABLE analysis_derivation (
+    derivation_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_id TEXT NOT NULL REFERENCES question_item(item_id) ON DELETE CASCADE,
+    axis_key TEXT NOT NULL,          -- e.g. 'axis1_curriculum'; open-world, not enum-constrained
+    schema_version INTEGER NOT NULL DEFAULT 1,
+    payload TEXT CHECK (payload IS NULL OR json_valid(payload)),
+    derived_by TEXT,                  -- free-text provenance tag (agent/actor id, migration tag, ...)
+    confidence REAL,
+    derived_at TEXT NOT NULL,
+    UNIQUE (item_id, axis_key, schema_version)
+);
+CREATE INDEX idx_analysis_derivation_axis_key ON analysis_derivation(axis_key);
+CREATE INDEX idx_analysis_derivation_item ON analysis_derivation(item_id);
+
+-- Tier 3: Axis Analysis (3-Layer 8-Axis "flat column" READ CONTRACT)
+-- ---------------------------------------------------------------------
+-- As of the I2 axis-agnostic storage refactor, `axis_analysis` is a
+-- READ-ONLY COMPATIBILITY VIEW over `analysis_derivation` (pivoted back
+-- into the original 8 named columns, pinned to schema_version=1) rather
+-- than a base table. It is documented here in CREATE-TABLE shape
+-- deliberately: this is the READER CONTRACT every existing consumer
+-- (pipeline/query_engine/selective_fetcher.py, claim_provenance.py, any
+-- ad-hoc SELECT) depends on and that scripts/validate_ssot_consistency.py
+-- check_ddl() verifies column-for-column against the live DB via
+-- PRAGMA table_info -- which returns this same column set whether the live
+-- object is a table or a view. INSERT/UPDATE/DELETE against this name are
+-- no longer valid; write through analysis_derivation instead.
 CREATE TABLE axis_analysis (
     item_id TEXT PRIMARY KEY REFERENCES question_item(item_id) ON DELETE CASCADE,
     -- Layer 1: Pre-processing & Data Infrastructure
@@ -189,7 +248,15 @@ END;
 CREATE TABLE claim_provenance (
     claim_id TEXT PRIMARY KEY,
     item_id TEXT NOT NULL REFERENCES question_item(item_id),
-    axis TEXT NOT NULL CHECK (axis IN ('Axis_1','Axis_2','Axis_3','Axis_4','Axis_5','Axis_6','Axis_7','Axis_8')),
+    -- Format check, not a membership check (relaxed 2026-07-26,
+    -- pipeline/migrate_db_ce_provenance.py). A closed enum here contradicted the
+    -- open-world storage doctrine in pipeline/query_engine/axis_registry.py and made
+    -- provenance impossible to record for any axis outside the legacy taxonomy.
+    -- Membership belongs to axis_registry.is_registered(), never to the writer.
+    axis TEXT NOT NULL CHECK (
+        axis GLOB 'Axis_[1-8]'
+        OR axis GLOB '[a-z][a-z0-9_]*.[a-z][a-z0-9_]*'
+    ),
     json_pointer TEXT NOT NULL,
     statement TEXT NOT NULL,
     claim_type TEXT NOT NULL CHECK (claim_type IN ('FACT','INFERENCE','ESTIMATE','OPINION')),

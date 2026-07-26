@@ -24,22 +24,24 @@ from typing import Any, Dict, List, Optional, Tuple
 # module load time (see review_state._write_transition_in_txn()).
 from pipeline.query_engine.review_state import ACTOR_TYPES
 
+# Single source of axis identity (I2 axis-agnostic storage refactor): the
+# 'Axis_1'..'Axis_8' <-> axisN_whatever column mapping used to be
+# hand-written a second time here (independently of the identical dict in
+# selective_fetcher.py); both now resolve through
+# pipeline/query_engine/axis_registry.py. NOTE: claim_provenance's `axis`
+# CHECK constraint (see docs/Taxonomy_Spec.md) is still closed to exactly
+# these 8 legacy Axis_N labels -- claim-level provenance was NOT extended
+# to arbitrary new axis_key values as part of the I2 refactor; see the I2
+# migration report for that explicitly-flagged limitation.
+from pipeline.query_engine.axis_registry import AXIS_COLUMN_BY_DICT_KEY
+
 import hashlib
 
 CLAIM_TYPES = ("FACT", "INFERENCE", "ESTIMATE", "OPINION")
 AXES = tuple(f"Axis_{i}" for i in range(1, 9))
 HUMAN_REVIEW_STATUSES = ("UNREVIEWED", "REVIEW_REQUIRED", "HUMAN_VERIFIED", "HUMAN_REJECTED")
 
-AXIS_COLUMN: Dict[str, str] = {
-    "Axis_1": "axis1_curriculum",
-    "Axis_2": "axis2_raw_parsing",
-    "Axis_3": "axis3_symbolic_modeling",
-    "Axis_4": "axis4_contextual_tree",
-    "Axis_5": "axis5_traps_verification",
-    "Axis_6": "axis6_genealogy",
-    "Axis_7": "axis7_mutation",
-    "Axis_8": "axis8_knowledge_graph",
-}
+AXIS_COLUMN: Dict[str, str] = dict(AXIS_COLUMN_BY_DICT_KEY)
 
 QUESTION_ITEM_FIELDS = {
     "exam_id", "track", "item_number", "score", "answer", "correct_rate", "asset_image_url", "rect_json"
