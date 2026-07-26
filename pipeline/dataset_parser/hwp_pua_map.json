@@ -1,0 +1,333 @@
+{
+ "schema_version": 1,
+ "source_font": "HyhwpEQ (Haansoft HWP equation font), CID Identity-H, ToUnicode maps these glyphs into the Unicode Private Use Area",
+ "derivation": "Glyph outlines extracted from embedded /FontFile2 programs across all 45 source PDFs, rendered via FreeType and visually identified. Codepoints are stable across documents (font-internal private encoding).",
+ "coverage": {
+  "distinct_pua_in_corpus": 80,
+  "mapped": 80,
+  "residual_after_mapping": 0,
+  "pua_share_of_all_extracted_text": "22.3%"
+ },
+ "map": {
+  "U+E000": {
+   "char": "A",
+   "category": "latin_letter"
+  },
+  "U+E001": {
+   "char": "B",
+   "category": "latin_letter"
+  },
+  "U+E002": {
+   "char": "C",
+   "category": "latin_letter"
+  },
+  "U+E005": {
+   "char": "F",
+   "category": "latin_letter"
+  },
+  "U+E006": {
+   "char": "G",
+   "category": "latin_letter"
+  },
+  "U+E00C": {
+   "char": "M",
+   "category": "latin_letter"
+  },
+  "U+E00E": {
+   "char": "O",
+   "category": "latin_letter"
+  },
+  "U+E011": {
+   "char": "R",
+   "category": "latin_letter"
+  },
+  "U+E012": {
+   "char": "S",
+   "category": "latin_letter"
+  },
+  "U+E013": {
+   "char": "T",
+   "category": "latin_letter"
+  },
+  "U+E017": {
+   "char": "X",
+   "category": "latin_letter"
+  },
+  "U+E018": {
+   "char": "Y",
+   "category": "latin_letter"
+  },
+  "U+E019": {
+   "char": "Z",
+   "category": "latin_letter"
+  },
+  "U+E034": {
+   "char": "1",
+   "category": "digit"
+  },
+  "U+E035": {
+   "char": "2",
+   "category": "digit"
+  },
+  "U+E036": {
+   "char": "3",
+   "category": "digit"
+  },
+  "U+E037": {
+   "char": "4",
+   "category": "digit"
+  },
+  "U+E038": {
+   "char": "5",
+   "category": "digit"
+  },
+  "U+E039": {
+   "char": "6",
+   "category": "digit"
+  },
+  "U+E03A": {
+   "char": "7",
+   "category": "digit"
+  },
+  "U+E03B": {
+   "char": "8",
+   "category": "digit"
+  },
+  "U+E03C": {
+   "char": "9",
+   "category": "digit"
+  },
+  "U+E03D": {
+   "char": "0",
+   "category": "digit"
+  },
+  "U+E044": {
+   "char": "(",
+   "category": "symbol"
+  },
+  "U+E045": {
+   "char": ")",
+   "category": "symbol"
+  },
+  "U+E046": {
+   "char": "-",
+   "category": "symbol"
+  },
+  "U+E047": {
+   "char": "=",
+   "category": "symbol"
+  },
+  "U+E048": {
+   "char": "+",
+   "category": "symbol"
+  },
+  "U+E049": {
+   "char": "[",
+   "category": "symbol"
+  },
+  "U+E04A": {
+   "char": "]",
+   "category": "symbol"
+  },
+  "U+E04B": {
+   "char": "{",
+   "category": "symbol"
+  },
+  "U+E04C": {
+   "char": "}",
+   "category": "symbol"
+  },
+  "U+E04D": {
+   "char": "|",
+   "category": "symbol"
+  },
+  "U+E04F": {
+   "char": ":",
+   "category": "symbol"
+  },
+  "U+E052": {
+   "char": ",",
+   "category": "symbol"
+  },
+  "U+E053": {
+   "char": "⋅",
+   "category": "symbol"
+  },
+  "U+E055": {
+   "char": "<",
+   "category": "symbol"
+  },
+  "U+E056": {
+   "char": ">",
+   "category": "symbol"
+  },
+  "U+E05B": {
+   "char": "∫",
+   "category": "big_operator"
+  },
+  "U+E05C": {
+   "char": "√",
+   "category": "big_operator"
+  },
+  "U+E067": {
+   "char": "Σ",
+   "category": "big_operator"
+  },
+  "U+E06D": {
+   "char": "―",
+   "category": "extensible_bar"
+  },
+  "U+E06E": {
+   "char": "→",
+   "category": "symbol"
+  },
+  "U+E078": {
+   "char": "⎧",
+   "category": "extensible_delimiter_piece"
+  },
+  "U+E079": {
+   "char": "⎨",
+   "category": "extensible_delimiter_piece"
+  },
+  "U+E07A": {
+   "char": "⎩",
+   "category": "extensible_delimiter_piece"
+  },
+  "U+E07B": {
+   "char": "⎪",
+   "category": "extensible_delimiter_piece"
+  },
+  "U+E09D": {
+   "char": "α",
+   "category": "greek"
+  },
+  "U+E09E": {
+   "char": "β",
+   "category": "greek"
+  },
+  "U+E0A4": {
+   "char": "θ",
+   "category": "greek"
+  },
+  "U+E0AC": {
+   "char": "π",
+   "category": "greek"
+  },
+  "U+E0AE": {
+   "char": "σ",
+   "category": "greek"
+  },
+  "U+E0E5": {
+   "char": "a",
+   "category": "latin_letter"
+  },
+  "U+E0E6": {
+   "char": "b",
+   "category": "latin_letter"
+  },
+  "U+E0E7": {
+   "char": "c",
+   "category": "latin_letter"
+  },
+  "U+E0E8": {
+   "char": "d",
+   "category": "latin_letter"
+  },
+  "U+E0E9": {
+   "char": "e",
+   "category": "latin_letter"
+  },
+  "U+E0EA": {
+   "char": "f",
+   "category": "latin_letter"
+  },
+  "U+E0EB": {
+   "char": "g",
+   "category": "latin_letter"
+  },
+  "U+E0EC": {
+   "char": "h",
+   "category": "latin_letter"
+  },
+  "U+E0ED": {
+   "char": "i",
+   "category": "latin_letter"
+  },
+  "U+E0EF": {
+   "char": "k",
+   "category": "latin_letter"
+  },
+  "U+E0F0": {
+   "char": "l",
+   "category": "latin_letter"
+  },
+  "U+E0F1": {
+   "char": "m",
+   "category": "latin_letter"
+  },
+  "U+E0F2": {
+   "char": "n",
+   "category": "latin_letter"
+  },
+  "U+E0F4": {
+   "char": "p",
+   "category": "latin_letter"
+  },
+  "U+E0F5": {
+   "char": "q",
+   "category": "latin_letter"
+  },
+  "U+E0F6": {
+   "char": "r",
+   "category": "latin_letter"
+  },
+  "U+E0F7": {
+   "char": "s",
+   "category": "latin_letter"
+  },
+  "U+E0F8": {
+   "char": "t",
+   "category": "latin_letter"
+  },
+  "U+E0FA": {
+   "char": "v",
+   "category": "latin_letter"
+  },
+  "U+E0FC": {
+   "char": "x",
+   "category": "latin_letter"
+  },
+  "U+E0FD": {
+   "char": "y",
+   "category": "latin_letter"
+  },
+  "U+E0FE": {
+   "char": "z",
+   "category": "latin_letter"
+  },
+  "U+E100": {
+   "char": "⎡",
+   "category": "extensible_delimiter_piece"
+  },
+  "U+E101": {
+   "char": "∣",
+   "category": "symbol"
+  },
+  "U+E102": {
+   "char": "⎤",
+   "category": "extensible_delimiter_piece"
+  },
+  "U+E103": {
+   "char": "⎣",
+   "category": "extensible_delimiter_piece"
+  },
+  "U+E104": {
+   "char": "⎦",
+   "category": "extensible_delimiter_piece"
+  },
+  "U+E105": {
+   "char": "∣",
+   "category": "symbol"
+  }
+ }
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "curation": "A lemma is added only when comparing two REAL items required it. Never added speculatively, never auto-added by the search itself -- an auto-grown library reproduces exactly the false-IDENTICAL risk the hash recipe guards against. Retired entries are archived with the witness that retired them, never deleted.",
+  "lemmas": [
+    {
+      "lemma_id": "MULTIPLICITY_PARITY_SIGN",
+      "statement": "For a polynomial F with a root of multiplicity exactly m at x0, F changes sign at x0 if and only if m is odd.",
+      "direction": "BIDIRECTIONAL",
+      "bridges": [],
+      "preconditions": ["ambient_typing.family == POLYNOMIAL"],
+      "proof_sketch": "Locally F(x) = (x-x0)^m G(x) with G(x0) != 0; the sign near x0 is sign(G(x0)) times sign((x-x0)^m), which flips exactly when m is odd.",
+      "citing_item_ids": ["202606_MATH_DIF_15"],
+      "why_it_matters": "This is the lemma that lets SIGN_CHANGE be dropped as a bindable slot on ROOT_MULT. Without it, one fact could be written two ways and hash differently.",
+      "curator": "owner",
+      "added_at": "2026-07-26",
+      "status": "ACTIVE"
+    },
+    {
+      "lemma_id": "MONOTONE_INJECTIVITY",
+      "statement": "If h is strictly monotonic on its domain and h(a) = h(b), then a = b.",
+      "direction": "BIDIRECTIONAL",
+      "bridges": [],
+      "preconditions": ["h strictly monotonic on the domain in question"],
+      "proof_sketch": "Strict monotonicity is injectivity.",
+      "citing_item_ids": ["202506_MATH_DIF_22"],
+      "why_it_matters": "Collapses 2^v + v = k + log2(k) to v = log2(k), since h(t) = 2^t + t has h'(t) = 2^t ln2 + 1 > 0 everywhere.",
+      "curator": "owner",
+      "added_at": "2026-07-26",
+      "status": "ACTIVE"
+    }
+  ]
+}

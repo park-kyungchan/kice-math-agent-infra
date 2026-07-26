@@ -1,6 +1,6 @@
 # SSoT (Single Source of Truth) Governance Map
 
-This document establishes the authoritative sources of truth for all domains within the `kice-math-agent-infra` system (v2.9.1). Any conflict between documents must be resolved by referring to the designated SSoT for that domain.
+This document establishes the authoritative sources of truth for all domains within the `kice-math-agent-infra` system (v2.10.0). Any conflict between documents must be resolved by referring to the designated SSoT for that domain.
 
 > **Drift gate:** `scripts/validate_ssot_consistency.py` mechanically checks (1) Taxonomy_Spec DDL == live DB schema, (2) MANIFEST.json references and never duplicates PROJECT_STATE.json, (3) version-string coherence across root docs, (4) the documented transition matrix == `review_state.ALLOWED_TRANSITIONS`. CI runs it on every PR.
 
@@ -8,6 +8,14 @@ This document establishes the authoritative sources of truth for all domains wit
 **Document:** [`docs/Taxonomy_Spec.md`](Taxonomy_Spec.md)
 * **Domain:** 3-Layer 8-Axis Architecture, Database Schema, Enums, and Constraints.
 * **Governance:** Any changes to database schema or structural representation of mathematical concepts must be approved and reflected here first.
+* **Axis identity (I2 axis-agnostic storage refactor):** the 8-axis taxonomy is under owner review;
+  axis IDENTITY (key, human name, status `active`/`under_review`/`deprecated`, payload schema_version,
+  `analyser`/`generator`/`derived` kind) is governed by
+  [`pipeline/query_engine/axis_registry.py`](../pipeline/query_engine/axis_registry.py), not by DDL —
+  a new or redefined axis needs a registry entry + `analysis_derivation` rows, never a migration. Axis
+  DATA is stored in the generic `analysis_derivation` table (see Taxonomy_Spec.md §2); `axis_analysis`
+  is retained as a read-only compatibility VIEW over it so existing readers are unaffected. See
+  `pipeline/migrate_db_axis_agnostic.py`.
 
 ## 2. Stakeholder Value SSoT
 **Document:** [`docs/STAKEHOLDER_INTENT.md`](STAKEHOLDER_INTENT.md)

@@ -10,6 +10,16 @@ from typing import Dict, List, Any, Optional
 # that actually exist; it never synthesizes empty provenance (P0-4 fix).
 from pipeline.query_engine.claim_provenance import get_claims_for_items
 
+# Single source of axis identity (I2 axis-agnostic storage refactor): the
+# legacy 'Axis_1'..'Axis_8' dict-key convention this fetcher's public API
+# exposes maps to axis_analysis columns / analysis_derivation axis_key
+# values via pipeline/query_engine/axis_registry.py, not a hand-written
+# dict here. axis_analysis itself may be a real table or (post-migration) a
+# read-only compatibility VIEW over the generic analysis_derivation table --
+# a plain SELECT cannot tell the difference, so this fetcher's SQL is
+# unaffected either way.
+from pipeline.query_engine.axis_registry import AXIS_COLUMN_BY_DICT_KEY
+
 
 LAYER_MAPPING = {
     'data_infrastructure': ['Axis_1', 'Axis_2'],
@@ -126,16 +136,12 @@ class QuestionFetcher:
             'axes': {}
         }
         
-        # 8 Flat Column Axes Mapping
+        # Axis mapping, resolved through the axis registry (single source of
+        # axis identity) rather than a hand-written 8-entry dict.
+        row_keys = row.keys()
         raw_axes = {
-            'Axis_1': row['axis1_curriculum'] if 'axis1_curriculum' in row.keys() else None,
-            'Axis_2': row['axis2_raw_parsing'] if 'axis2_raw_parsing' in row.keys() else None,
-            'Axis_3': row['axis3_symbolic_modeling'] if 'axis3_symbolic_modeling' in row.keys() else None,
-            'Axis_4': row['axis4_contextual_tree'] if 'axis4_contextual_tree' in row.keys() else None,
-            'Axis_5': row['axis5_traps_verification'] if 'axis5_traps_verification' in row.keys() else None,
-            'Axis_6': row['axis6_genealogy'] if 'axis6_genealogy' in row.keys() else None,
-            'Axis_7': row['axis7_mutation'] if 'axis7_mutation' in row.keys() else None,
-            'Axis_8': row['axis8_knowledge_graph'] if 'axis8_knowledge_graph' in row.keys() else None,
+            dict_key: (row[column] if column in row_keys else None)
+            for dict_key, column in AXIS_COLUMN_BY_DICT_KEY.items()
         }
         
         for ax_key, raw_val in raw_axes.items():
@@ -193,14 +199,15 @@ class QuestionFetcher:
                 for i in range(0, len(missing_ids), CHUNK_SIZE):
                     chunk = missing_ids[i:i + CHUNK_SIZE]
                     placeholders = ','.join(['?'] * len(chunk))
+                    # axis_analysis columns, resolved through the registry
+                    # (axis1..axis8 order preserved -- see axis_registry.py).
+                    axis_col_list = ', '.join(f'a.{col}' for col in AXIS_COLUMN_BY_DICT_KEY.values())
                     sql = f'''
                         SELECT
                             q.item_id, q.exam_id, q.track, q.item_number, q.score, q.answer, q.correct_rate,
                             q.review_status, q.reviewer_id, q.review_history_json, {version_col}
                             q.latex_content, q.asset_image_url,
-                            a.axis1_curriculum, a.axis2_raw_parsing, a.axis3_symbolic_modeling,
-                            a.axis4_contextual_tree, a.axis5_traps_verification, a.axis6_genealogy,
-                            a.axis7_mutation, a.axis8_knowledge_graph
+                            {axis_col_list}
                         FROM question_item q
                         LEFT JOIN axis_analysis a ON q.item_id = a.item_id
                         WHERE q.item_id IN ({placeholders})
