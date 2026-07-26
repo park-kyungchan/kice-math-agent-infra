@@ -1,0 +1,113 @@
+{
+ "barrier": {
+  "verdict": "PASS",
+  "failures": [],
+  "soundness": [
+   {
+    "node": "N1",
+    "verdict": "TRUE",
+    "why": "holds of the function the other nodes determine"
+   },
+   {
+    "node": "N2",
+    "verdict": "TRUE",
+    "why": "holds of the function the other nodes determine"
+   },
+   {
+    "node": "N4",
+    "verdict": "UNCHECKED",
+    "why": "load-bearing: the remaining nodes do not determine a function to check it against, so it cannot be cross-checked from inside the set. Needs its derivation or an outside source."
+   }
+  ],
+  "sufficiency": {
+   "status": "DETERMINED",
+   "value": "27"
+  },
+  "minimality": {
+   "minimal_sufficient_subsets": [
+    [
+     "N1",
+     "N4"
+    ],
+    [
+     "N2",
+     "N4"
+    ]
+   ],
+   "keystone": [
+    "N4"
+   ],
+   "non_contributing": [],
+   "structure": "disjunctive"
+  },
+  "leaks": [],
+  "flags": []
+ },
+ "adjudication": {
+  "subject": "202606_MATH_DIF_15",
+  "results": [
+   {
+    "claimed_precedent": "202106_MATH_DIF_22",
+    "verdict": "ACCEPT",
+    "basis": "IMPLIES on ROOT_MULT",
+    "edges": [
+     {
+      "from_item": "202606_MATH_DIF_15",
+      "from_node": "N1",
+      "to_item": "202106_MATH_DIF_22",
+      "to_node": "P1",
+      "verdict": "IMPLIES",
+      "strength": 0.6,
+      "shared_conclusion": "ROOT_MULT",
+      "evidence": "ground instance implies existential generalisation on ['X0']",
+      "falsified_by": "exhibit a function satisfying N1 but not P1 (or the reverse for a symmetric verdict)"
+     },
+     {
+      "from_item": "202606_MATH_DIF_15",
+      "from_node": "N2",
+      "to_item": "202106_MATH_DIF_22",
+      "to_node": "P2",
+      "verdict": "IMPLIES",
+      "strength": 0.6,
+      "shared_conclusion": "ROOT_MULT",
+      "evidence": "ground instance implies existential generalisation on ['X0']",
+      "falsified_by": "exhibit a function satisfying N2 but not P2 (or the reverse for a symmetric verdict)"
+     }
+    ]
+   },
+   {
+    "claimed_precedent": "202411_MATH_DIF_22",
+    "verdict": "NOT_EXPRESSIBLE",
+    "basis": "no conclusion of this item can be stated in the current vocabulary, so the claim can be neither confirmed nor refuted here",
+    "edges": []
+   },
+   {
+    "claimed_precedent": "202506_MATH_DIF_22",
+    "verdict": "REJECT",
+    "basis": "no shared conclusion between any pair of non-background nodes",
+    "edges": []
+   }
+  ],
+  "tally": {
+   "ACCEPT": 1,
+   "REJECT": 1,
+   "UNDECIDED": 0,
+   "NOT_EXPRESSIBLE": 1
+  }
+ },
+ "acceptance": {
+  "AC1  no answer-key leak": true,
+  "AC2  adjudication matches the sealed reference": true,
+  "AC6  no derived stage before the barrier": true,
+  "AC7  substance anchor: nodes alone recover the target": true,
+  "AC7b stub set cannot recover": true,
+  "AC8a soundness: no node is false": true,
+  "AC8b minimality reported": true
+ },
+ "recovered": "27",
+ "answer": {
+  "response_type": "MULTIPLE_CHOICE",
+  "correct_option_index": 4,
+  "correct_value": 27
+ }
+}
