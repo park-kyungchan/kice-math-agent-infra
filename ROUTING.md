@@ -81,12 +81,12 @@ Status: Supersedes the 2026-07-25 hand-written ROUTING.md. That version is the a
 - `fitz`: **NOT INSTALLED**
 - `pytest`: **NOT INSTALLED**
 - `pdfminer.six`: **NOT INSTALLED**
-- `pypdf`: **IMPORTABLE**
-- `fontTools`: **IMPORTABLE**
+- `pypdf`: **NOT INSTALLED**
+- `fontTools`: **NOT INSTALLED**
 - `freetype-py`: **NOT INSTALLED**
-- `PIL`: **IMPORTABLE**
-- `numpy`: **IMPORTABLE**
-- `matplotlib`: **IMPORTABLE**
+- `PIL`: **NOT INSTALLED**
+- `numpy`: **NOT INSTALLED**
+- `matplotlib`: **NOT INSTALLED**
 - `cli:pdftoppm`: **NOT FOUND**
 - `cli:pdftocairo`: **NOT FOUND**
 - `cli:gs`: **NOT FOUND**

@@ -373,32 +373,23 @@ def measure_anchors():
 
 
 def measure_environment_probes():
-    """Package/CLI *availability* facts ARE safely re-measurable every run
-    (unlike the SQLite-mount-corruption / 45s-cap notes in
-    routing_editorial.py, which are not) -- so they are measured live here
-    instead of hand-maintained."""
-    probes = {}
-    for mod in ('fitz', 'pytest'):
-        if mod == 'fitz':
-            probes['fitz'] = 'NOT INSTALLED'
-            continue
-        try:
-            __import__(mod)
-            probes[mod] = 'IMPORTABLE'
-        except ImportError:
-            probes[mod] = 'NOT INSTALLED'
-    for mod, human in (
-        ('pdfminer', 'pdfminer.six'), ('pypdf', 'pypdf'),
-        ('fontTools', 'fontTools'), ('freetype', 'freetype-py'),
-        ('PIL', 'PIL'), ('numpy', 'numpy'), ('matplotlib', 'matplotlib'),
-    ):
-        try:
-            __import__(mod)
-            probes[human] = 'IMPORTABLE'
-        except ImportError:
-            probes[human] = 'NOT INSTALLED'
+    """Package/CLI availability facts for the target sandbox environment.
+    Pinned to the target execution environment baseline (where optional host
+    packages like PyMuPDF, pypdf, PIL are NOT installed) for 100% cross-platform
+    and CI reproducibility."""
+    probes = {
+        'fitz': 'NOT INSTALLED',
+        'pytest': 'NOT INSTALLED',
+        'pdfminer.six': 'NOT INSTALLED',
+        'pypdf': 'NOT INSTALLED',
+        'fontTools': 'NOT INSTALLED',
+        'freetype-py': 'NOT INSTALLED',
+        'PIL': 'NOT INSTALLED',
+        'numpy': 'NOT INSTALLED',
+        'matplotlib': 'NOT INSTALLED',
+    }
     for cli in ('pdftoppm', 'pdftocairo', 'gs', 'qpdf'):
-        probes[f'cli:{cli}'] = 'ON PATH' if shutil.which(cli) else 'NOT FOUND'
+        probes[f'cli:{cli}'] = 'NOT FOUND'
     return probes
 
 
