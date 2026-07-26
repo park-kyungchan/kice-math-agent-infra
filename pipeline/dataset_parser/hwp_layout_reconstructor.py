@@ -89,8 +89,14 @@ import os
 import re
 from collections import Counter
 
-from pdfminer.high_level import extract_pages
-from pdfminer.layout import LTChar
+try:
+    from pdfminer.high_level import extract_pages
+    from pdfminer.layout import LTChar
+    _HAS_PDFMINER = True
+except ImportError:
+    extract_pages = None
+    LTChar = None
+    _HAS_PDFMINER = False
 
 # ---------------------------------------------------------------------------
 # PUA map loading
@@ -167,7 +173,7 @@ def _is_pua(ch):
 # ---------------------------------------------------------------------------
 
 def _walk_chars(obj, out):
-    if isinstance(obj, LTChar):
+    if LTChar is not None and isinstance(obj, LTChar):
         out.append(obj)
     elif hasattr(obj, "__iter__"):
         for child in obj:
@@ -1346,6 +1352,8 @@ def extract_pdf_questions(pdf_path):
     extract_pdf_questions(pdf_path), using pdfminer.six per-character
     coordinates + geometric 2D reconstruction instead of discarded-layout
     text blocks."""
+    if not _HAS_PDFMINER:
+        raise ImportError("pdfminer.six is required for extract_pdf_questions")
     all_items = []
     for page_num, page in enumerate(extract_pages(pdf_path)):
         page_height = page.bbox[3] - page.bbox[1]

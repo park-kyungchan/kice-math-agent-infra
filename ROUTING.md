@@ -142,6 +142,6 @@ EDITORIAL (reviewed 2026-07-25):
 
 ## 8. Self-check — MEASURED path/command audit of this document
 
-- Paths/filenames referenced: 33 checked, 0 broken.
+- Paths/filenames referenced: 32 checked, 0 broken.
 - Commands referenced in fenced code blocks: 4 checked, 0 broken.
 

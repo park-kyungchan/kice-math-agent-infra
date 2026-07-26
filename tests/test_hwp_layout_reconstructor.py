@@ -271,6 +271,8 @@ class TestFullPdfCalibration(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        if not getattr(hlr, "_HAS_PDFMINER", False):
+            raise unittest.SkipTest("pdfminer not installed")
         if not os.path.exists(CALIBRATION_PDF):
             raise unittest.SkipTest("calibration PDF not present")
         cls.items = hlr.extract_pdf_questions(CALIBRATION_PDF)
@@ -349,6 +351,8 @@ class TestRegressionFixesTrackD(unittest.TestCase):
 
     @classmethod
     def _items(cls, pdf_name):
+        if not getattr(hlr, "_HAS_PDFMINER", False):
+            raise unittest.SkipTest("pdfminer not installed")
         if pdf_name not in cls._CACHE:
             path = os.path.join(BASE_DIR, 'raw_dataset', pdf_name)
             if not os.path.exists(path):
