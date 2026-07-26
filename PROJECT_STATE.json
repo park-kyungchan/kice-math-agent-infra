@@ -17,12 +17,11 @@
   "local_gate_status": "RED_BY_DESIGN",
   "ci_evidence": {
     "workflow": "governance-ci",
-    "run_id": 30140136599,
-    "tested_head_sha": "6eb30603f1c0d74f562f037a549f584c7729f322",
-    "latest_attested_commit": "6eb30603f1c0d74f562f037a549f584c7729f322",
+    "run_id": 30192970083,
+    "tested_head_sha": "97189ded09818f340aa2b46eaeeb19c6d048fcbe",
+    "latest_attested_commit": "97189ded09818f340aa2b46eaeeb19c6d048fcbe",
     "conclusion": "success",
-    "verified_at": "2026-07-25T02:17:30Z",
-    "_stale_warning": "This attestation predates the 2026-07-25/26 data recovery and governance work. It is retained for provenance only and does NOT attest the current tree."
+    "verified_at": "2026-07-26T07:36:30Z"
   },
   "overall_status": "PARTIALLY_VERIFIED",
   "version": "v2.10.0",
