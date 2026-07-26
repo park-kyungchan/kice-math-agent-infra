@@ -1,30 +1,39 @@
 {
   "architecture_status": "BASELINE_COMPLETE",
-  "pilot_anchor_status": "MATHEMATICALLY_REVIEWED",
+  "source_data_status": "VERIFIED",
+  "pilot_anchor_status": "CIRCULAR_PROOF_RETRACTED",
+  "axis_analysis_status": "PLACEHOLDER_1347_OF_1350",
+  "taxonomy_status": "UNDER_OWNER_REVIEW",
   "lineage_status": "PROVISIONAL",
   "quality_plane_contract": "IMPLEMENTED",
-  "independent_execution_proof": "COMPLETE",
+  "independent_execution_proof": "RETRACTED_CIRCULAR",
   "teacher_governance_loop": "ACTIVE",
   "claim_provenance": "ACTIVE",
   "governance_enforcement": "ADVERSARIAL_BOUNDARY_ENFORCED",
   "audit_integrity": "LOCAL_HASH_CHAIN_IMPLEMENTED",
   "audit_authenticity": "SERVICE_SIGNED",
-  "semantic_verification": "APPROVED",
+  "semantic_verification": "RETRACTED_CIRCULAR",
   "ci_status": "GOVERNANCE_CI_GREEN",
+  "local_gate_status": "RED_BY_DESIGN",
   "ci_evidence": {
     "workflow": "governance-ci",
     "run_id": 30140136599,
     "tested_head_sha": "6eb30603f1c0d74f562f037a549f584c7729f322",
     "latest_attested_commit": "6eb30603f1c0d74f562f037a549f584c7729f322",
     "conclusion": "success",
-    "verified_at": "2026-07-25T02:17:30Z"
+    "verified_at": "2026-07-25T02:17:30Z",
+    "_stale_warning": "This attestation predates the 2026-07-25/26 data recovery and governance work. It is retained for provenance only and does NOT attest the current tree."
   },
-  "overall_status": "VERIFIED",
-  "version": "v2.9.1",
+  "overall_status": "PARTIALLY_VERIFIED",
+  "version": "v2.10.0",
   "_semantics": {
-    "SERVICE_API_NOT_ISOLATED": "v2.9.1 Hotfix: Governance Service API implemented with intent-based endpoints, but in-process Python boundary requires OS environment secret and DB trigger enforcement.",
-    "PARTIAL_SCAFFOLDED": "v2.9.1 Hotfix: Independent solver & holdout engines scaffolded; non-circular SymPy execution and Canonical Answer Schema being enforced.",
-    "PROVISIONAL": "v2.9.1 Hotfix: Semantic proof pending true non-circular solver execution, dynamic holdout variation, and live GitHub REST API attestation.",
-    "authority": "This file is the single source of truth for dynamic project state; MANIFEST.json must reference, never duplicate, it."
+    "authority": "This file is the single source of truth for dynamic project state; MANIFEST.json must reference, never duplicate, it.",
+    "VERIFIED": "source_data_status only: question text, official answers and response types are complete for all 1,350 items and were verified against rendered source pages and official answer keys (2026-07-25/26).",
+    "PLACEHOLDER_1347_OF_1350": "analysis_derivation holds real analysis for only 3 items (202606_MATH_{DIF,GEO,PRO}_15). The other 1,347 are placeholder payloads. The drift gate reports this and MUST stay red until real analysis exists.",
+    "RETRACTED_CIRCULAR": "Retracted 2026-07-26. The prior COMPLETE/APPROVED claims rested on independent_solver.py, which was empirically shown to return results only via its circular fallback path: with the answer properly withheld it returns NOT_RUN even on the pilot anchors with fully repaired text. Compounding this, the pilot anchor payloads themselves embed the answer (axis5 carries {'correct_option': 4, 'correct_answer_value': 27}; axis3 carries {'calculated_value': {'f_6': 27}}), so any proof consuming them was circular by construction. Evidence: pipeline/axis_eval/ M4 + guard_non_circular, scratch/staging/I3/REPORT.txt.",
+    "CIRCULAR_PROOF_RETRACTED": "The three pilot anchors remain the only items with real analysis, but 'MATHEMATICALLY_REVIEWED' overstated it: the review could not have been independent, per RETRACTED_CIRCULAR above.",
+    "ci_status": "Describes the attested remote workflow run recorded in ci_evidence, which did succeed. It does NOT describe the current tree -- see ci_evidence._stale_warning and local_gate_status.",
+    "RED_BY_DESIGN": "scripts/validate_ssot_consistency.py exits 1 locally, reporting 7 stub-sentinel defects. This is the audit working correctly, not a build break. A green local gate would mean the gate had been weakened. An audit that lies is worse than no audit.",
+    "PARTIALLY_VERIFIED": "Source data verified; analysis layer is placeholder and its taxonomy is under review. Do not promote to VERIFIED until the stub-sentinel gate passes on real analysis."
   }
 }
